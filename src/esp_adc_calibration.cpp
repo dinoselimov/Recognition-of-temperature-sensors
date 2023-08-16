@@ -141,10 +141,6 @@ for(int i = 0; i < 100; i++){
   
 }
 
-void loop(){
-
-}
-
 float calculateTemperature(float resistance, std::string sensorType) {
     float alfa, delta, A, B;
     float PT100T, PT1000T, T1, T2, T3, TR1, TR2, TR3, Rth;
@@ -221,7 +217,7 @@ double ReadVoltage(byte pin){
   Serial.println("Branje");
   Serial.println(reading);
   if(reading < 1 || reading > 4095) return 0;
-  reading_analog = reading * 3.272/4095;
+  reading_analog = reading * 3.272/4095; // referenca je pomerjena 3.272, pretvorimo iz digitalnog v analogno
   return reading_analog;
 
   // nekaj poskusov kalibracije
@@ -285,4 +281,7 @@ double ReadVoltage(byte pin){
  *  
  */
 
-#endif
+
+void loop(){
+
+}
