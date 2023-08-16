@@ -1,4 +1,3 @@
-#if 0
 #include <iostream>
 #include <Arduino.h>
 #include "esp_adc_cal.h"
@@ -34,8 +33,8 @@ void setup() {
   float napetosti_skupne1, napetosti_skupne2, napetosti_skupne3, napetosti_skupne4;
   float povprecje_r1, povprecje_t1, povprecje_r2, povprecje_t2, povprecje_r3, povprecje_t3, povprecje_r4, povprecje_t4;
   float povprecje_n1, povprecje_n2, povprecje_n3, povprecje_n4;
-for(int i = 0; i < 100; i++){
   
+for(int i = 0; i < 100; i++){
   Serial.println("TH5K");
   napetost = ReadVoltage(32);
   napetosti_povprecne1[i] = napetost;
@@ -222,9 +221,13 @@ double ReadVoltage(byte pin){
   Serial.println("Branje");
   Serial.println(reading);
   if(reading < 1 || reading > 4095) return 0;
+  reading_analog = reading * 3.272/4095;
+  return reading_analog;
+
+  // nekaj poskusov kalibracije
   //return -0.000000000009824 * pow(reading,3) + 0.000000016557283 * pow(reading,2) + 0.000854596860691 * reading + 0.065440348345433;
   //return -0.000000000000016 * pow(reading,4) + 0.000000000118171 * pow(reading,3)- 0.000000301211691 * pow(reading,2)+ 0.001109019271794 * reading + 0.034143524634089;  
- // return  coeff1 * std::pow(reading, 2) + coeff2 * reading + coeff3;
+  // return  coeff1 * std::pow(reading, 2) + coeff2 * reading + coeff3;
   //return ((reading)/4095) * 3.3 * 1.114;
   //if(reading > 2800 || (reading < 700 && reading > 400))
   /*
@@ -233,14 +236,12 @@ double ReadVoltage(byte pin){
   calibrated = (reading / full_scale_digital) * internal_voltage;
   return calibrated;
   */
-  reading_analog = reading * 3.272/4095;
   //calibrated = -0.03841 * pow(reading_analog,2) + 1.086 * reading_analog + 0.1052;
   //calibrated_4 = -0.01288*pow(reading_analog,4) + 0.05475*pow(reading_analog,3) - 0.08338*pow(reading_analog,2) + 1.064*reading_analog + 0.1165;
   //calibrated_4 = -0.03812*pow(reading_analog,2) + 1.083*reading_analog + 0.0996;
   //calibrated_4 = -0.03708 * pow(reading_analog,2) + 1.081*reading_analog + 0.1005;
   //calibrated_4 = -0.03761*pow(reading_analog,2) + 1.082*reading_analog + 0.1;
-  calibrated_4 = -0.02134*pow(reading_analog,4) + 0.102*pow(reading_analog,3)- 0.1659*pow(reading_analog,2) + 1.113*reading_analog+ 0.1074;
-  return calibrated_4;
+  // calibrated_4 = -0.02134*pow(reading_analog,4) + 0.102*pow(reading_analog,3)- 0.1659*pow(reading_analog,2) + 1.113*reading_analog+ 0.1074;
   //return -25.01*pow(reading,4) + 110.4*pow(reading,3) - 156.9*pow(reading,2) + 1397*reading + 87.94;
   //return reading * 3.272/4095;
   //else
