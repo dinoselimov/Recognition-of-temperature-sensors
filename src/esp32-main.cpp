@@ -11,14 +11,10 @@
 #define PT10032 32 // Analog IN
 #define PT10033 33 // Analog IN
 #define DRUGIMERILNIK 34 // DRUGI ANALOGNI
-// Replace the next variables with your SSID/Password combination
+
 const char* ssid = "GNX611368";
 const char* password = "12345678";
-// Add your MQTT Broker IP address, example:
-//const char* mqtt_server = "192.168.1.144";
 const char *mqttServer = "broker.hivemq.com";
-//const int mqttPort = 1883; // pri 1883 dela, pri 8883 ne
-//const char *mqttServer = "127.0.0.1";
 const int mqttPort = 1883; // pri 1883 dela, pri 8883 ne
 const char* mqtt_user = "DinoSelim";
 const char* mqtt_password = "";
@@ -28,7 +24,7 @@ const char* topicOne = "upornosti/one";
 const char* topicTwo = "drugi/merilnik";
 const char* topicTemperature = "temperature";
 
-bool start_temperature_measurement = false;
+bool start_temperature_measurement = false; //uporablja se po prepoznavi, da začnemo druga merjenja
 
 double ReadVoltage(byte pin);
 
@@ -39,6 +35,7 @@ float adc_voltage(float left_voltage){
   float output_voltage = left_voltage * (3.3/pow(2,12));
   return output_voltage; //to je v pravih vrednostih
 }
+
 int wheatstone_resistance(float output_voltage){
   float R_0 = 1000;
   float Rth = R_0*((3.3/output_voltage) - 1);
@@ -47,12 +44,11 @@ int wheatstone_resistance(float output_voltage){
 
 void callback(char* topic, byte* payload, unsigned int length) {
   // Handle received MQTT messages
-  Serial.println("Message received!"); // Add this line
+  Serial.println("Message received!"); 
   if (strncmp(topic, control_topic, length) == 0) {
-    // Convert payload to string
     String message = "";
     for (int i = 0; i < length; i++) {
-      message += (char)payload[i];
+      message += (char)payload[i]; //pretvorba payloada v string
     }
 
     // Parse the received JSON message
@@ -62,7 +58,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     int measurements_count = 0;
 
     // Parse the JSON message
-    DynamicJsonDocument doc(256); // Adjust the buffer size according to your needs
+    DynamicJsonDocument doc(256); 
     DeserializationError error = deserializeJson(doc, message);
 
     Serial.println("JSON message recieved:" + message);
@@ -181,7 +177,6 @@ void loop() {
     char output[50];
     resistanceDoc["R"] = resistance;
     serializeJson(resistanceDoc, output);
-    // Publish the resistance value to the MQTT topic
     String topicStr = topicTemperature; // Modify the topic according to the temperature you are measuring
     client.publish(topicStr.c_str(), output, false); // QoS 0
 
@@ -194,9 +189,8 @@ void loop() {
 double ReadVoltage(byte pin){
   double reading = analogRead(pin); // Reference voltage is 3v3 so maximum reading is 3v3 = 4095 in range 0 to 4095
   if(reading < 1 || reading > 4095) return 0;
-  // return -0.000000000009824 * pow(reading,3) + 0.000000016557283 * pow(reading,2) + 0.000854596860691 * reading + 0.065440348345433;
   return -0.000000000000016 * pow(reading,4) + 0.000000000118171 * pow(reading,3)- 0.000000301211691 * pow(reading,2)+ 0.001109019271794 * reading + 0.034143524634089;
-} // Added an improved polynomial, use either, comment out as required
+} // poskus kalibracije
 
 
 /* ADC readings v voltage
