@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import CubicSpline
 
-# Given data points
+# Iz datasheetov
 x_data_pt100 = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 y_data_pt100 = [100, 103.903, 107.794, 111.673, 115.541, 119.397, 123.242, 127.075, 130.897, 134.707, 138.505]
 
