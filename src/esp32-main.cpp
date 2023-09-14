@@ -1,5 +1,3 @@
-
-
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <json.h>
