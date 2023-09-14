@@ -20,6 +20,8 @@ void setup() {
   Serial.begin(9600);
   
   analogReadResolution(12);
+  analogSetAttenuation(ADC_11db);
+
 
   float napetost, upornost, temperatura;
   float napetost2, upornost2, temperatura2;
@@ -46,7 +48,7 @@ for(int i = 0; i < 100; i++){
   Serial.println(temperatura);
 
   Serial.println("PT1000");
-  napetost2 = ReadVoltage(34);
+  napetost2 = ReadVoltage(32);
   napetosti_povprecne2[i] = napetost2;
   upornost2 = wheatstone_resistance(napetost2);
   upornosti_povprecne2[i] = upornost2;
@@ -183,6 +185,10 @@ float calculateTemperature(float resistance, std::string sensorType) {
         thC = (gamma3 - gamma2) / (std::log(TR3) - std::log(TR2)) * (std::log(TR1) + std::log(TR2) + std::log(TR3));
         thB = gamma2 - thC * (std::log(TR1) * std::log(TR1) + std::log(TR1) * std::log(TR2) + std::log(TR2) * std::log(TR2));
         thA = 1 / T1 - (thB + std::log(TR1) * std::log(TR1) * thC) * std::log(TR1);
+
+        float thA = 1.2874E-03;
+        float thB = 2.3573E-04;
+        float thC = 9.5052E-08;
         T_th = std::abs(1 / (thA + thB * std::log(resistance) + thC * std::log(resistance) * std::log(resistance) * std::log(resistance)) - 273.15);
 
         return T_th;   
