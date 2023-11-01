@@ -30,26 +30,6 @@ def quadratic_model(upornosti, temperature):
     theta = LA.solve(R, QT.dot(y))
 
     return theta
-'''
-def exponential_model(xi, yi):
-    # Calculate exponential model parameters
-    sumX = sum(np.log(xi))
-    sumX2 = sum(np.log(xi) * np.log(xi))
-    sumY = sum(np.log(yi))
-    sumXY = sum(np.log(xi) * np.log(yi))
-
-    print(sumX)
-    print(sumX2)
-    print(sumY)
-    print(sumXY)
-    n = len(xi)
-    b = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
-    A = (sumY - b * sumX) / n
-
-    a = np.exp(A)
-
-    return a, b
-'''
 
 def exponential_model(xi, yi):
     # Calculate exponential model parameters
@@ -63,18 +43,17 @@ def exponential_model(xi, yi):
     print(a)
     print(b)
     return a, b
-
-
-x0 = 14066
-x1 = 5000
-x2 = 419
+'''
+x0 = 32320
+x1 = 12468
+x2 = 701
 y0 = 2
 y1 = 25
 y2 = 99
-
-x0 = 100
-x1 = 108
-x2 = 138
+'''
+x0 = 14066
+x1 = 5000
+x2 = 419
 y0 = 2
 y1 = 25
 y2 = 99
@@ -113,8 +92,6 @@ plt.title('Curve Fitting')
 plt.legend()
 plt.show()
 
-# ... (your existing code)
-
 # Calculate the residuals for both models
 quad_residuals = temperature - (quad_params[0] + quad_params[1] * upornosti + quad_params[2] * upornosti**2)
 exp_residuals = temperature - (exp_a * np.power(upornosti, exp_b))
@@ -145,7 +122,6 @@ plt.ylabel('Residuals')
 plt.title('Exponential Fit Residuals')
 plt.legend()
 
-
 plt.subplot(2, 1, 2)
 plt.scatter(upornosti, exp_residuals, label='Linear Residuals', color='black')
 plt.axhline(y=0, color='black', linestyle='--')
@@ -168,38 +144,34 @@ print("Quadratic Fit RMSE:", quad_rmse)
 print("Exponential Fit RMSE:", exp_rmse)
 print("Linear Fit RMSE:", lin_rmse)
 
-
-
-#temperatura_1 = 
-def recognizeInstrument(upornost, temperatura):
+def recognizeInstrument(upornost, temperatura, pt_rmse, exp_rmse):
     # Fit the models to the data
-
-    thermistor_params, _ = curve_fit(exponential_model, temperatura, upornost)
-    pt_params, _ = curve_fit(exponential_model, temperatura, upornost)
+    thermistor_params = exponential_model(upornost, temperatura)
+    pt_params = quadratic_model(upornost, temperatura)
 
     # Print the parameters for each model
     print("Thermistor Parameters:", thermistor_params)
     print("PT Parameters:", pt_params)
 
-    # Compare the parameters to differentiate between the sensor types
-    if thermistor_params[1] < pt_params[1]:
+      # Compare the parameters to differentiate between the sensor types
+    if exp_rmse < pt_rmse:
         print("It's likely a thermistor.")
+        # Further differentiate between 4.7k and 10k thermistors based on parameters
+        if thermistor_params[0] > 100 and thermistor_params[1] < -0.0001:
+            print("It's likely a 10k thermistor.")
+            sensor_type = "TH10K"
+        else:
+            print("It's likely a 4.7k thermistor.")
+            sensor_type = "TH4.7K"
     else:
-        print("It's likely a PT sensor.")
-    sensor_type = ""
-
-    min_deff = min(pt100_diff, pt1000_diff, th5k_diff, th10k_diff)
-    if min_deff == pt100_diff:
-        print("PT100")
-        sensor_type = "PT100"
-    elif min_deff == pt1000_diff:
-        print("PT1000")
-        sensor_type = "PT1000"
-    elif min_deff == th5k_diff:
-        print("TH5K")
-        sensor_type = "TH5K"
-    elif min_deff == th10k_diff:
-        print("TH10K")
-        sensor_type = "TH10K"
-
+        # Differentiate between PT100 and PT1000 based on parameters
+        if pt_params[1] > 1:
+            print("It's likely a PT100.")
+            sensor_type = "PT100"
+        else:
+            print("It's likely a PT1000.")
+            sensor_type = "PT1000"
     return sensor_type
+
+
+recognizeInstrument(upornosti, temperature, lin_rmse, exp_rmse)

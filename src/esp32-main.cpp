@@ -1,3 +1,4 @@
+#if 0
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <json.h>
@@ -202,3 +203,5 @@ double ReadVoltage(byte pin){
  *  3775     3.0
  *  
  */
+
+#endif

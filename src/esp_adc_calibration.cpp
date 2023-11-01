@@ -1,3 +1,5 @@
+#if 0 
+
 #include <iostream>
 #include <Arduino.h>
 #include "esp_adc_cal.h"
@@ -291,3 +293,5 @@ double ReadVoltage(byte pin){
 void loop(){
 
 }
+
+#endif
