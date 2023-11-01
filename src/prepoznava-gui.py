@@ -3,7 +3,7 @@ import paho.mqtt.client as mqtt
 import json
 import time
 import tkinter as tk
-import algoritem
+import novialgoritem
 import numpy as np
 import math
 
@@ -214,7 +214,7 @@ class App:
         average = np.array([average_first, average_second, average_third])
         
         print(self.temperatures)
-        self.sensor_type = probat.recognizeInstrument(average, self.temperatures)
+        self.sensor_type = novialgoritem.recognizeInstrument(average, self.temperatures)
         # Define the known temperature-resistance values for each sensor type
         self.sensor_type_label.config(text=f"Sensor Type: {self.sensor_type}")
 
