@@ -24,6 +24,7 @@ class App:
         self.temperatures = []
         self.sensor_type = None
 
+
     # Function which stores temperature
     def store_temperature(self, temperature, index):
         print(f"Temperature {index}: {temperature}")
@@ -124,6 +125,9 @@ class App:
         
         client.connect(broker_address, broker_port)
         client.username_pw_set(mqtt_user, mqtt_password)
+        client.subscribe("control")
+        client.subscribe("resistances")
+    
         print("Python MQTT established")
 
         return client # We return client to use as a object
@@ -134,14 +138,20 @@ class App:
         measurements_count = 10
         command = {
             "action": "start_measurements",
-            "measurements_count": measurements_count
+            "measurements_count": 10
         }
         message = json.dumps(command)
         topic = "control"
         client.subscribe(topic)
         
         # Send command to start measurements on the ESP32
-        self.mid = client.publish(topic, message)[1]
+        self.result, self.mid = client.publish(topic, message)
+
+        if self.result == mqtt.MQTT_ERR_SUCCESS:
+            print("Successfully published control to topic")
+        else:
+            print(f"failed to publish a message, error number:{self.result}")
+        self.client_disconnect() # Because of this not being here, messages were not deployed to broker
 
     def receive_measurements(self):
         # Connect to MQTT broker
