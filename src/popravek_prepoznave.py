@@ -14,13 +14,10 @@ class App:
         self.stop_mqtt_thread = False
         self.mqtt_processing_over = False
         self.measurements_received = 0
-        self.measurement_pack_received = 0
         self.measurements = []
         self.measurement_pack_first = []
         self.measurement_pack_second = []
         self.measurement_pack_third = []
-        self.new_second_table = []
-        self.new_third_table = []
         self.temperatures = []
         self.sensor_type = None
 
@@ -53,27 +50,24 @@ class App:
             if len(self.measurements) == 10 and not self.measurement_pack_first:
                 self.measurement_pack_first = self.measurements[:]
                 self.measurements.clear()
-                self.measurement_pack_received += 1
                 print("Sprejeta prva lista:", self.measurement_pack_first)
             
-            if len(self.measurement_pack_first) == 10 and not self.new_second_table:                
+            if len(self.measurement_pack_first) == 10 and not self.measurement_pack_second:                
                 for i in range(len(self.measurements)): 
                     self.new_second_table.append(self.measurements[i])
                     self.measurements.clear()
-                    self.measurement_pack_received += 1
-                    print("Sprejeta druga lista:", self.new_second_table)
+                    print("Sprejeta druga lista:", self.measurement_pack_second)
 
-            if len(self.measurement_pack_first) == 10 and len(self.new_second_table) == 10 and not self.new_third_table:
+            if len(self.measurement_pack_first) == 10 and len(self.new_second_table) == 10 and not self.measurement_pack_third:
                 for i in range(len(self.measurements)):    
                     self.new_third_table.append(self.measurements[i])
                     self.measurements.clear()
-                    self.measurement_pack_received += 1
-                    print("Sprejeta tretja lista:", self.new_third_table)
+                    print("Sprejeta tretja lista:", self.measurement_pack_third)
 
             if (
                 len(self.measurement_pack_first) == 10
-                and len(self.new_second_table) == 10
-                and len(self.new_third_table) == 10
+                and len(self.measurement_pack_second) == 10
+                and len(self.measurement_pack_third) == 10
             ):
                 self.additional_code() 
 
