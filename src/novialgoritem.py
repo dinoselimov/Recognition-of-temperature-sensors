@@ -51,17 +51,26 @@ y0 = 2
 y1 = 25
 y2 = 99
 '''
+'''
 x0 = 14066
 x1 = 5000
 x2 = 419
 y0 = 2
 y1 = 25
 y2 = 99
-
-
+'''
+'''
+x0 = 1010
+x1 = 1140
+x2 = 1370
+y0 = 2
+y1 = 25
+y2 = 99
+'''
+'''
 # Sample data points
-upornosti = np.array([x0, x1, x2])  # Replace with your xi values
-temperature = np.array([y0, y1, y2])  # Replace with your yi values
+#upornosti = np.array([x0, x1, x2])  # Replace with your xi values
+#temperature = np.array([y0, y1, y2])  # Replace with your yi values
 
 lin_params = linear_model(upornosti, temperature)
 # Fit the quadratic model
@@ -80,6 +89,7 @@ x_fit = np.linspace(min(upornosti), max(upornosti), 100)
 lin_fit = lin_params[0] + lin_params[1]*x_fit
 quad_y_fit = quad_params[0] + quad_params[1] * x_fit + quad_params[2] * x_fit**2
 exp_y_fit = exp_a * np.exp(x_fit*exp_b)
+
 
 # Plot the original data points and the fitted curves
 plt.scatter(upornosti, temperature, label='Original Data')
@@ -131,20 +141,40 @@ plt.title('Linear Fit Residuals')
 plt.legend()
 plt.tight_layout()
 plt.show()
+'''
 
 def rmse(actual, predicted):
     return np.sqrt(np.mean((actual - predicted)**2))
 
-# Calculate RMSE for each model
-quad_rmse = rmse(temperature, quad_y_fit[temperature])
-exp_rmse = rmse(temperature, exp_y_fit[temperature])
-lin_rmse = rmse(temperature, lin_fit[temperature])
+def recognizeInstrument(upornost, temperatura):
+        
+    lin_params = linear_model(upornost, temperatura)
+    # Fit the quadratic model
+    quad_params = quadratic_model(upornost, temperatura)
+    # Fit the exponential model
+    exp_a, exp_b = exponential_model(upornost, temperatura)
+    # Print the parameters for each model
 
-print("Quadratic Fit RMSE:", quad_rmse)
-print("Exponential Fit RMSE:", exp_rmse)
-print("Linear Fit RMSE:", lin_rmse)
+    print("Linear Model Parameters:", lin_params)
+    print("Quadratic Model Parameters:", quad_params)
+    print("Exponential Model Parameters: a =", exp_a, "b =", exp_b)
 
-def recognizeInstrument(upornost, temperatura, pt_rmse, exp_rmse):
+    # Generate x values for plotting
+    x_fit = np.linspace(min(upornost), max(upornost), 100)
+    # Calculate corresponding y values using the models
+    lin_fit = lin_params[0] + lin_params[1]*x_fit
+    quad_y_fit = quad_params[0] + quad_params[1] * x_fit + quad_params[2] * x_fit**2
+    exp_y_fit = exp_a * np.exp(x_fit*exp_b)
+    
+    # Calculate RMSE for each model
+    quad_rmse = rmse(temperatura, quad_y_fit[temperatura])
+    exp_rmse = rmse(temperatura, exp_y_fit[temperatura])
+    lin_rmse = rmse(temperatura, lin_fit[temperatura])
+    
+    print("Quadratic Fit RMSE:", quad_rmse)
+    print("Exponential Fit RMSE:", exp_rmse)
+    print("Linear Fit RMSE:", lin_rmse)
+
     # Fit the models to the data
     thermistor_params = exponential_model(upornost, temperatura)
     pt_params = quadratic_model(upornost, temperatura)
@@ -154,7 +184,7 @@ def recognizeInstrument(upornost, temperatura, pt_rmse, exp_rmse):
     print("PT Parameters:", pt_params)
 
       # Compare the parameters to differentiate between the sensor types
-    if exp_rmse < pt_rmse:
+    if exp_rmse < quad_rmse:
         print("It's likely a thermistor.")
         # Further differentiate between 4.7k and 10k thermistors based on parameters
         if thermistor_params[0] > 100 and thermistor_params[1] < -0.0001:
@@ -165,13 +195,10 @@ def recognizeInstrument(upornost, temperatura, pt_rmse, exp_rmse):
             sensor_type = "TH4.7K"
     else:
         # Differentiate between PT100 and PT1000 based on parameters
-        if pt_params[1] > 1:
+        if upornost[0] and upornost[1] and upornost[2] < 500:
             print("It's likely a PT100.")
             sensor_type = "PT100"
         else:
             print("It's likely a PT1000.")
             sensor_type = "PT1000"
     return sensor_type
-
-
-recognizeInstrument(upornosti, temperature, lin_rmse, exp_rmse)

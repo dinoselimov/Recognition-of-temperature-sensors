@@ -1,3 +1,4 @@
+
 from threading import Thread
 import paho.mqtt.client as mqtt
 import json
@@ -12,7 +13,9 @@ class App:
         self.temperature = None
         self.stop_mqtt_thread = False
         self.mqtt_processing_over = False
-        self.measurement_pack_recieved = 0
+        self.measurements_received = 0
+        self.measurement_pack_received = 0
+        self.measurements = []
         self.measurement_pack_first = []
         self.measurement_pack_second = []
         self.measurement_pack_third = []
@@ -21,51 +24,51 @@ class App:
         self.temperatures = []
         self.sensor_type = None
 
-    
+    # Function which stores temperature
     def store_temperature(self, temperature, index):
         print(f"Temperature {index}: {temperature}")
         self.temperatures.append(temperature)
 
+    # Callback function which is used, when the MQTT is connected to a broker
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             print("Connected to MQTT broker")
         else:
             print("Failed to connect to MQTT broker")
     
+    # Callback function when we receive measurements
     def on_message(self, client, userdata, message):
         topic = message.topic
         payload = json.loads(message.payload.decode('utf-8'))
         print("on_message called")
         
         if topic == "resistances":
-            resistance = payload["R"]
-            self.measurements.append(resistance) # to je lista v katero shranjujemo
+            resistance = payload["R"]                       
+            self.measurements.append(resistance) # to je lista iz katere shranjujemo
+            print("Appending one resistance")
             self.measurements_received += 1
 
             print("Received resistance measurement:", resistance)
             if len(self.measurements) == 10 and not self.measurement_pack_first:
                 self.measurement_pack_first = self.measurements[:]
                 self.measurements.clear()
-                self.measurement_pack_recieved += 1
+                self.measurement_pack_received += 1
                 print("Sprejeta prva lista:", self.measurement_pack_first)
             
-            if len(self.measurement_pack_first) + len(self.measurements) == 30 and not self.new_second_table:                
-                for i in range(len(self.measurements)):
-                    if i%2 == 1:
-                        self.new_second_table.append(self.measurements[i])
-                self.measurements.clear()
-                self.measurement_pack_recieved += 1
-                print("Sprejeta druga lista:", self.new_second_table)
+            if len(self.measurement_pack_first) == 10 and not self.new_second_table:                
+                for i in range(len(self.measurements)): 
+                    self.new_second_table.append(self.measurements[i])
+                    self.measurements.clear()
+                    self.measurement_pack_received += 1
+                    print("Sprejeta druga lista:", self.new_second_table)
 
-            if len(self.measurement_pack_first) + len(self.new_second_table) + len(self.measurements) == 50:
-                for i in range(len(self.measurements)):
-                    if i%3 == 2:
-                        self.new_third_table.append(self.measurements[i])
-                self.measurements.clear()
-                self.measurement_pack_recieved += 1
-                print("Sprejeta tretja lista:", self.new_third_table)
+            if len(self.measurement_pack_first) == 10 and len(self.new_second_table) == 10 and not self.new_third_table:
+                for i in range(len(self.measurements)):    
+                    self.new_third_table.append(self.measurements[i])
+                    self.measurements.clear()
+                    self.measurement_pack_received += 1
+                    print("Sprejeta tretja lista:", self.new_third_table)
 
-            
             if (
                 len(self.measurement_pack_first) == 10
                 and len(self.new_second_table) == 10
@@ -108,49 +111,26 @@ class App:
                 thA = 1/T1 - (thB + math.log(TR1)**2 * thC) * math.log(TR1)
                 T_th = 1 / (thA + thB * math.log(Rth) + thC * math.log(Rth)**3) - 273.15
                 '''
-            
-    def mqtt_thread_function(self):
+    # Function which connects to broker with our username and password             
+    def connect_to_broker(self):
         client = mqtt.Client()
         client.on_connect = self.on_connect
         client.on_message = self.on_message
 
         broker_address = "broker.hivemq.com"
         broker_port = 1883
-
         mqtt_user = "DinoSelim"
         mqtt_password = "IdeaPad+-.2604"
-
+        
         client.connect(broker_address, broker_port)
         client.username_pw_set(mqtt_user, mqtt_password)
+        print("Python MQTT established")
 
-        topic = "resistances"
-        client.subscribe(topic)
-        print("Subscribed to topic:", topic)
-
-        client.loop_start()
- 
+        return client # We return client to use as a object
     
-    # Check the publish status in the on_publish callback
-    def on_publish(self, client, userdata, mid):
-        if mid == mid:
-            print("Command published successfully")
-        else:
-            print("Failed to publish command")
+    def send_command(self):
+        client = self.connect_to_broker()
 
-    def start_measurements(self, temperature_number):
-        self.measurements_received = 0
-        self.measurements = []
-
-        broker_address = "broker.hivemq.com"
-        broker_port = 1883
-        mqtt_user = "DinoSelim"
-        mqtt_password = "IdeaPad+-.2604"
-
-        client = mqtt.Client()
-        client.username_pw_set(mqtt_user, mqtt_password)
-        client.connect(broker_address, broker_port)
-        client.loop_start()
-    
         measurements_count = 10
         command = {
             "action": "start_measurements",
@@ -159,36 +139,45 @@ class App:
         message = json.dumps(command)
         topic = "control"
         client.subscribe(topic)
-
-        mqtt_thread = Thread(target=self.mqtt_thread_function)
-        mqtt_thread.start()
-
-        # Publish the message
+        
+        # Send command to start measurements on the ESP32
         self.mid = client.publish(topic, message)[1]
 
-        # Set the on_publish callback
-        client.on_publish = self.on_publish
+    def receive_measurements(self):
+        # Connect to MQTT broker
+        client = self.connect_to_broker() # Getting a MQTT client object
+        # Subscribe to the topic for receiving measurements
+        topic = "resistances"
+        client.subscribe(topic)
+        print("Subscribed to topic:", topic)
 
-        while self.measurements_received < measurements_count:
-            time.sleep(1)
+        # Start background thread for MQTT communication
+        client.loop_start()
+
+        #while self.measurements_received < 10:
+        #   time.sleep(1)
         
-        print(f"Received measurements: {temperature_number}", self.measurements)
-        client.loop_stop()
+        print(f"Received measurements: ", self.measurements)
+
+        # Remember to disconnect or handle the disconnection properly when you're done.
         client.disconnect()
+        # Receive and process measurements from the ESP32
+
+
+            
+    # Check the publish status in the on_publish callback
+    def on_publish(self, client, userdata, mid):
+        if mid == mid:
+            print("Command published successfully")
+        else:
+            print("Failed to publish command")
 
     def start_temperature_measurements(self):
-        broker_address = "broker.hivemq.com"
-        broker_port = 1883
-        mqtt_user = "DinoSelim"
-        mqtt_password = "IdeaPad+-.2604"
-
-        client = mqtt.Client()
-        client.username_pw_set(mqtt_user, mqtt_password)
+        client = self.connect_to_broker()
         
         # Set the on_publish callback
         client.on_publish = self.on_publish
 
-        client.connect(broker_address, broker_port)
         client.loop_start()
         
         topic = "temperature"
@@ -200,8 +189,7 @@ class App:
 
         # Publish the message
         self.mid = client.publish(topic, message)[1]
-
-    
+        
     def additional_code(self):   
         average_first = sum(self.measurement_pack_first)/len(self.measurement_pack_first)
         average_second = sum(self.new_second_table)/len(self.new_second_table)
@@ -218,16 +206,19 @@ class App:
         self.sensor_type_label.config(text=f"Sensor Type: {self.sensor_type}")
 
         mqtt_thread2 = Thread(target=self.start_temperature_measurements)
-        mqtt_thread2.start()        
+        mqtt_thread2.start()
+        
         time.sleep(5)
         print("Additional code execution completed.")
 
-    def run(self):
-        print("Press Enter to start measurements...")
-        input()
-        self.store_temperature()
-        self.start_measurements()
-        
+    # Function which starts process, sends command to start measurements
+    def start_measurements_process(self, i):
+        # We are calling send_command to send command for starting measurements
+        self.send_command()
+        # We are calling receive_measurements 
+        mqtt_thread = Thread(target=self.receive_measurements)
+        mqtt_thread.start()
+        #self.receive_measurements()    
         
     def start_measurements_button(self):
         window = tk.Tk()
@@ -238,15 +229,12 @@ class App:
         frame = tk.Frame(window)
         frame.pack(pady=20)
 
-        # Create the start measurement buttons
-        start_button1 = tk.Button(frame, text="Začni meritev temperature št. 1", command=lambda: self.start_measurements(1))
-        start_button1.pack(anchor="w", pady=5)
+        # Makes three buttons for three temperatures
+        for i in range(1, 4):
+            button_text = f"Začni meritev temperature št. {i}"
+            start_button = tk.Button(frame, text=button_text, command=lambda i=i: self.start_measurements_process(i))
+            start_button.pack(anchor="w", pady=5)
 
-        start_button2 = tk.Button(frame, text="Začni meritev temperature št. 2", command=lambda: self.start_measurements(2))
-        start_button2.pack(anchor="w", pady=5)
-
-        start_button3 = tk.Button(frame, text="Začni meritev temperature št. 3", command=lambda: self.start_measurements(3))
-        start_button3.pack(anchor="w", pady=5)
 
         # Create the temperature labels, entries, and store buttons
         temperature_frame = tk.Frame(window)

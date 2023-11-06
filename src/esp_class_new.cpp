@@ -1,4 +1,3 @@
-#if 0
 #define PT10032 32 // Analog IN
 #define PT10033 33 // Analog IN
 #define DRUGIMERILNIK 34 // DRUGI ANALOGNI
@@ -50,7 +49,7 @@ int wheatstone_resistance(float output_voltage){
 
 void callback(char* topic, byte* payload, unsigned int length) {
   // Handle received MQTT messages
-  Serial.println("Message received!"); 
+  Serial.println("Callback is called");
   if (strncmp(topic, control_topic, length) == 0) {
     String message = "";
     for (int i = 0; i < length; i++) {
@@ -66,7 +65,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
     // Parse the JSON message
     DynamicJsonDocument doc(256); 
     DeserializationError error = deserializeJson(doc, message);
-
     Serial.println("JSON message recieved:" + message);
     
     // Check for parsing errors
@@ -80,10 +78,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (doc.containsKey("action")) {
       action = doc["action"].as<String>();
     }
-
+    Serial.println("Message received!"); 
+      
     if (doc.containsKey("measurements_count")) {
       measurements_count = doc["measurements_count"].as<int>();
     }
+    Serial.println(action);
     
     // Check the received action
     if (action == "start_measurements") {
@@ -110,8 +110,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
         // Delay for 1 second before the next measurement
         delay(1000);
     }
-    if (action = "start/temperature"){
-  //    start_temperature_measurement = true;
+    if (action == "start/temperature"){
+      //start_temperature_measurement = true;
     }
   }
 }
@@ -154,12 +154,13 @@ void setup() {
   // Nastavitev MQTT protokola
   client.setServer(mqttServer, mqttPort);
   client.setCallback(callback);
+  Serial.println("Callback is set");
 
   while (!client.connected()) {
     Serial.println("Connecting to MQTT broker...");
       if (client.connect("ESP32_client")) {
         Serial.println("Connected to MQTT broker!");
-        client.subscribe("resistances");
+        client.subscribe(topicOne);
         client.subscribe(control_topic);
         client.subscribe(topicTwo);
         client.subscribe(topicTemperature);
@@ -215,4 +216,3 @@ double ReadVoltage(){
   // Serial.print("AIN3: "); Serial.print(adc3); Serial.print("  "); Serial.print(volts3); Serial.println("V");
   return volts0;
   } 
-#endif

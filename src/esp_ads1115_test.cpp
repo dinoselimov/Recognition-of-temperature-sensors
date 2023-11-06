@@ -1,3 +1,4 @@
+#if 0 
 #include <Arduino.h>
 #include <Wire.h>
 #include "ADS1X15.h"
@@ -56,3 +57,5 @@ void loop(void)
 
   delay(1000);
 }
+
+#endif
