@@ -1,3 +1,4 @@
+#if 0
 #include <WiFi.h>
 #include <PubSubClient.h>
 
@@ -82,3 +83,4 @@ void loop() {
   }
   client.loop();
 }
+#endif

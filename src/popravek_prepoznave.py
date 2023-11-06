@@ -125,8 +125,6 @@ class App:
         
         client.connect(broker_address, broker_port)
         client.username_pw_set(mqtt_user, mqtt_password)
-        client.subscribe("control")
-        client.subscribe("resistances")
     
         print("Python MQTT established")
 
@@ -151,7 +149,9 @@ class App:
             print("Successfully published control to topic")
         else:
             print(f"failed to publish a message, error number:{self.result}")
-        self.client_disconnect() # Because of this not being here, messages were not deployed to broker
+        
+        time.sleep(1)
+        client.disconnect() # Because of this not being here, messages were not deployed to broker
 
     def receive_measurements(self):
         # Connect to MQTT broker
@@ -169,12 +169,10 @@ class App:
         
         print(f"Received measurements: ", self.measurements)
 
-        # Remember to disconnect or handle the disconnection properly when you're done.
-        client.disconnect()
+        time.sleep(1)       # Sleep to wait for next message
+        client.disconnect() # Disconnecting MQTT after receiving message
         # Receive and process measurements from the ESP32
 
-
-            
     # Check the publish status in the on_publish callback
     def on_publish(self, client, userdata, mid):
         if mid == mid:

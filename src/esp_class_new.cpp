@@ -1,4 +1,3 @@
-#if 0
 #define PT10032 32 // Analog IN
 #define PT10033 33 // Analog IN
 #define DRUGIMERILNIK 34 // DRUGI ANALOGNI
@@ -57,6 +56,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       message += (char)payload[i]; //pretvorba payloada v string
     }
 
+    Serial.println(message);
     // Parse the received JSON message
     // Assuming the message has the format: {"action": "start_measurements", "measurements_count": 10}
     // Extract the action and measurements_count values
@@ -155,7 +155,6 @@ void setup() {
   // Nastavitev MQTT protokola
   client.setServer(mqttServer, mqttPort);
   client.setCallback(callback);
-  Serial.println("Callback is set");
 
   while (!client.connected()) {
     Serial.println("Connecting to MQTT broker...");
@@ -217,4 +216,3 @@ double ReadVoltage(){
   // Serial.print("AIN3: "); Serial.print(adc3); Serial.print("  "); Serial.print(volts3); Serial.println("V");
   return volts0;
   } 
-#endif
