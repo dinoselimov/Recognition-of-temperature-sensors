@@ -48,31 +48,24 @@ class App:
                 print("Appending one resistance")
                 self.measurements_received += 1
                 print("Received resistance measurement:", resistance)
-                
-                if len(self.measurements) == 10 and not self.measurement_pack_first:
-                    self.measurement_pack_first = self.measurements[:]
+
+                if len(self.measurements) == 10:
+                    if not self.measurement_pack_first:
+                        self.measurement_pack_first = self.measurements[:]
+                    elif not self.measurement_pack_second:
+                        self.measurement_pack_second = self.measurements[:]
+                    elif not self.measurement_pack_third:
+                        self.measurement_pack_third = self.measurements[:]            
+                    self.measurements_received = 0
                     self.measurements.clear()
-                    print("Sprejeta prva lista:", self.measurement_pack_first)
+                            
+                    if (
+                        len(self.measurement_pack_first) == 10
+                        and len(self.measurement_pack_second) == 10
+                        and len(self.measurement_pack_third) == 10
+                    ):
+                        self.additional_code() 
                 
-                if len(self.measurement_pack_first) == 10 and not self.measurement_pack_second:                
-                    for i in range(len(self.measurements)): 
-                        self.new_second_table.append(self.measurements[i])
-                        self.measurements.clear()
-                        print("Sprejeta druga lista:", self.measurement_pack_second)
-
-                if len(self.measurement_pack_first) == 10 and len(self.measurement_pack_second) == 10 and not self.measurement_pack_third:
-                    for i in range(len(self.measurements)):    
-                        self.new_third_table.append(self.measurements[i])
-                        self.measurements.clear()
-                        print("Sprejeta tretja lista:", self.measurement_pack_third)
-
-                if (
-                    len(self.measurement_pack_first) == 10
-                    and len(self.measurement_pack_second) == 10
-                    and len(self.measurement_pack_third) == 10
-                ):
-                    self.additional_code() 
-            
         
         print(f"Received measurements: ", self.measurements)
     # Function which connects to broker with our username and password             
@@ -127,6 +120,9 @@ class App:
 
         # Start background thread for MQTT communication
         client.loop_start()
+        while len(self.measurements) < 10:
+            print("We don't have 10 measurements yet")
+            time.sleep(2)
 
         time.sleep(1)       # Sleep to wait for next message
         client.disconnect() # Disconnecting MQTT after receiving message
