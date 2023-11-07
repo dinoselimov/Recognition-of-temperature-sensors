@@ -46,7 +46,7 @@ int wheatstone_resistance(float output_voltage){
   float Rth = R_0*((3.3/output_voltage) - 1);
   return Rth;
 }
-
+ 
 void callback(char* topic, byte* payload, unsigned int length) {
   // Handle received MQTT messages
   Serial.println("Callback is called");

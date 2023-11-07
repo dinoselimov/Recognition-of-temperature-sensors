@@ -1,4 +1,3 @@
-
 from threading import Thread
 import paho.mqtt.client as mqtt
 import json
@@ -21,7 +20,6 @@ class App:
         self.temperatures = []
         self.sensor_type = None
 
-
     # Function which stores temperature
     def store_temperature(self, temperature, index):
         print(f"Temperature {index}: {temperature}")
@@ -36,76 +34,47 @@ class App:
     
     # Callback function when we receive measurements
     def on_message(self, client, userdata, message):
-        topic = message.topic
-        payload = json.loads(message.payload.decode('utf-8'))
+        self.topic = message.topic
+        self.payload = json.loads(message.payload.decode('utf-8'))
         print("on_message called")
         
-        if topic == "resistances":
-            resistance = payload["R"]                       
-            self.measurements.append(resistance) # to je lista iz katere shranjujemo
-            print("Appending one resistance")
-            self.measurements_received += 1
-
-            print("Received resistance measurement:", resistance)
-            if len(self.measurements) == 10 and not self.measurement_pack_first:
-                self.measurement_pack_first = self.measurements[:]
-                self.measurements.clear()
-                print("Sprejeta prva lista:", self.measurement_pack_first)
-            
-            if len(self.measurement_pack_first) == 10 and not self.measurement_pack_second:                
-                for i in range(len(self.measurements)): 
-                    self.new_second_table.append(self.measurements[i])
-                    self.measurements.clear()
-                    print("Sprejeta druga lista:", self.measurement_pack_second)
-
-            if len(self.measurement_pack_first) == 10 and len(self.new_second_table) == 10 and not self.measurement_pack_third:
-                for i in range(len(self.measurements)):    
-                    self.new_third_table.append(self.measurements[i])
-                    self.measurements.clear()
-                    print("Sprejeta tretja lista:", self.measurement_pack_third)
-
-            if (
-                len(self.measurement_pack_first) == 10
-                and len(self.measurement_pack_second) == 10
-                and len(self.measurement_pack_third) == 10
-            ):
-                self.additional_code() 
-
-        if topic == "temperature":  
-            resistance = payload["R"]
-
-            if self.sensor_type == "PT100":
-                alfa = 0.00385
-                delta = 1.5
-                A = alfa*(1+delta/100)
-                B = -alfa*delta*0.0001
-                PT100T = (-A + math.sqrt(A*A -4*B*(1-resistance/100)))/(2*B)
-                print(PT100T)
-            elif self.sensor_type == "PT1000":
-                alfa = 0.00385
-                delta = 1.5
-                A = alfa*(1+delta/100)
-                B = -alfa*delta*0.0001
-                R = 0
-                PT1000T = (-A + math.sqrt(A*A -4*B*(1-resistance/1000)))/(2*B)
-                print(PT1000T)
-            elif self.sensor_type == "TH5K":    
-                '''            
-                T1 = # Assign the value of T1 here
-                T2 = # Assign the value of T2 here
-                T3 = # Assign the value of T3 here
-                TR1 = # Assign the value of TR1 here
-                TR2 = # Assign the value of TR2 here
-                TR3 = # Assign the value of TR3 here
-                Rth = # Assign the value of Rth here
+        while self.measurements_received < 10:
+            topic = self.topic
+            payload = self.payload
+            print("on_message called")
+            if topic == "resistances":
+                resistance = payload["R"]                       
+                self.measurements.append(resistance) # to je lista iz katere shranjujemo
+                print("Appending one resistance")
+                self.measurements_received += 1
+                print("Received resistance measurement:", resistance)
                 
-                gamma2 = (1/T2 - 1/T1) / (math.log(TR2) - math.log(TR1))
-                gamma3 = (1/T3 - 1/T1) / (math.log(TR3) - math.log(TR1))
-                thC = (gamma3 - gamma2) / (math.log(TR3) - math.log(TR2)) * (math.log(TR1) + math.log(TR2) + math.log(TR3))**-1
-                thB = gamma2 - thC * (math.log(TR1)**2 + math.log(TR1) * math.log(TR2) + math.log(TR2)**2)
-                thA = 1/T1 - (thB + math.log(TR1)**2 * thC) * math.log(TR1)
-                T_th = 1 / (thA + thB * math.log(Rth) + thC * math.log(Rth)**3) - 273.15
-                '''
+                if len(self.measurements) == 10 and not self.measurement_pack_first:
+                    self.measurement_pack_first = self.measurements[:]
+                    self.measurements.clear()
+                    print("Sprejeta prva lista:", self.measurement_pack_first)
+                
+                if len(self.measurement_pack_first) == 10 and not self.measurement_pack_second:                
+                    for i in range(len(self.measurements)): 
+                        self.new_second_table.append(self.measurements[i])
+                        self.measurements.clear()
+                        print("Sprejeta druga lista:", self.measurement_pack_second)
+
+                if len(self.measurement_pack_first) == 10 and len(self.measurement_pack_second) == 10 and not self.measurement_pack_third:
+                    for i in range(len(self.measurements)):    
+                        self.new_third_table.append(self.measurements[i])
+                        self.measurements.clear()
+                        print("Sprejeta tretja lista:", self.measurement_pack_third)
+
+                if (
+                    len(self.measurement_pack_first) == 10
+                    and len(self.measurement_pack_second) == 10
+                    and len(self.measurement_pack_third) == 10
+                ):
+                    self.additional_code() 
+            
+        
+        print(f"Received measurements: ", self.measurements)
     # Function which connects to broker with our username and password             
     def connect_to_broker(self):
         client = mqtt.Client()
@@ -148,8 +117,9 @@ class App:
         client.disconnect() # Because of this not being here, messages were not deployed to broker
 
     def receive_measurements(self):
-        # Connect to MQTT broker
+        # Because is another Thread, we need to connect to broker again
         client = self.connect_to_broker() # Getting a MQTT client object
+        received_measurements = 0
         # Subscribe to the topic for receiving measurements
         topic = "resistances"
         client.subscribe(topic)
@@ -157,11 +127,6 @@ class App:
 
         # Start background thread for MQTT communication
         client.loop_start()
-
-        #while self.measurements_received < 10:
-        #   time.sleep(1)
-        
-        print(f"Received measurements: ", self.measurements)
 
         time.sleep(1)       # Sleep to wait for next message
         client.disconnect() # Disconnecting MQTT after receiving message
