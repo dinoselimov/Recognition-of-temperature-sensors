@@ -1,28 +1,16 @@
-#if 0
-#include <iostream>
-#include <cmath>
 #include <Arduino.h>
-#include "esp_adc_cal.h"
-#include "driver/adc.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <Wire.h>
+#include "ADS1X15.h"
+#include <iostream>
+using namespace ADS1X15;
 
-#define PT10033 33 
-#define ADC_PIN 33
-#define AN_Pot1 33
-#define voltage_divider_offset 1.0 // Should be a value of 2.000, but ADC input impedance loads the voltage divider, requiring a correction
-
-float ReadVoltage (byte ADC_Pin);
-uint32_t readADC_Cal(int ADC_Raw);
+//ADS1015<TwoWire> ads(Wire); /* Use this for the 12-bit version */
+ADS1115<TwoWire> ads(Wire); /* Use this for the 16-bit version */  
 
 
-float adc_voltage(float left_voltage){
-  float output_voltage = left_voltage * (3.3/(pow(2,12)-1));
-  return output_voltage; 
-}
 float wheatstone_resistance(float output_voltage){
   float R_0 = 980;
-  float Rth = R_0*((3.3/output_voltage) - 1);
+  float Rth = R_0*((3.268/output_voltage) - 1);
   return Rth;
 }
 
@@ -95,75 +83,54 @@ float calculateTemperature(float resistance, std::string sensorType) {
 
     }
 }
-    
-void setup(){
-    Serial.begin(9600);
-    float resistances[100] = {0.0};
-    float temperatures[100] = {0.0};
-    float temperatures_average;
-    float resistances_average;
-    /*
-    for(int i = 0; i < 100; i++){
-        float Vin2 = analogRead(PT10033);
-        float voltage = adc_voltage(Vin2);
-        Serial.println(voltage);
-        float resistance = wheatstone_resistance(voltage);
-        resistances[i] = resistance;
-        temperatures[i] = calculateTemperature(resistances[i], "PT1000");
-        Serial.print("R = ");
-        Serial.print(resistances[i]);
-        Serial.print("T = ");
-        Serial.println(temperatures[i]);
-        
-        delay(100);
-    }
-    for(int j = 0; j < 100; j++){
-        resistances_average += resistances[j];
-        temperatures_average += temperatures[j]; 
-    }
-    resistances_average = resistances_average/100;
-    temperatures_average = temperatures_average/100;
-    Serial.print("Povprečna R = ");
-    Serial.println(resistances_average);
-    Serial.print("Povprečna T = ");
-    Serial.print(temperatures_average);
-    */
+
+void setup(void)
+{
+  Serial.begin(9600);
+  Serial.println("Hello!");
+
+  Serial.println("Getting single-ended readings from AIN0..3");
+  Serial.println("ADC Range: +/- 6.144V (1 bit = 3mV/ADS1015, 0.1875mV/ADS1115)");
+
+  // The ADC input range (or gain) can be changed via the following
+  // functions, but be careful never to exceed VDD +0.3V max, or to
+  // exceed the upper and lower limits if you adjust the input range!
+  // Setting these values incorrectly may destroy your ADC!
+  //                                                                ADS1015  ADS1115
+  //                                                                -------  -------
+  // ads.setGain(GAIN_TWOTHIRDS);  // 2/3x gain +/- 6.144V  1 bit = 3mV      0.1875mV (default)
+  // ads.setGain(GAIN_ONE);        // 1x gain   +/- 4.096V  1 bit = 2mV      0.125mV
+  // ads.setGain(GAIN_TWO);        // 2x gain   +/- 2.048V  1 bit = 1mV      0.0625mV
+  // ads.setGain(GAIN_FOUR);       // 4x gain   +/- 1.024V  1 bit = 0.5mV    0.03125mV
+  // ads.setGain(GAIN_EIGHT);      // 8x gain   +/- 0.512V  1 bit = 0.25mV   0.015625mV
+  // ads.setGain(GAIN_SIXTEEN);    // 16x gain  +/- 0.256V  1 bit = 0.125mV  0.0078125mV
+
+  ads.begin();
+  ads.setGain(Gain::TWOTHIRDS_6144MV);
+  ads.setDataRate(Rate::ADS1015_250SPS);
 }
 
-void loop(){  
-  float resistance, resistance2;
-  float AN_Pot1_Result, Voltage, voltage, temperature, adj_voltage, analog;
-  /*
-  analog = analogRead(PT10033);
-  voltage = adc_voltage(analog);
-  adj_voltage = ReadVoltage(PT10033);
-  Serial.println("   adc = " + String(voltage,3) + "v");
-  */
+void temp(int channel, const char* sensor_type){
+  int16_t adc;
+  float volt, res, temp;
+  adc = ads.readADCSingleEnded(channel);
+  volt = ads.computeVolts(adc);
+  res = wheatstone_resistance(volt);
+  temp = calculateTemperature(res, sensor_type);
 
-  AN_Pot1_Result = analogRead(AN_Pot1);
-  Voltage = readADC_Cal(AN_Pot1_Result) / 1000.0;
-  //Serial.println(Voltage/1000.0); // Print Voltage (in V)
-  Serial.println(Voltage); // Print Voltage (in mV)
-  delay(100);
-  resistance = wheatstone_resistance(Voltage);
-  Serial.println(resistance);
-
-  /*
-  resistance2 = wheatstone_resistance(voltage);
-  Serial.println(resistance);
-  Serial.println(resistance2);
-  */
-  temperature = calculateTemperature(resistance, "PT1000");
-  Serial.println(temperature);
-  delay(5000);
+  Serial.print("AIN"); Serial.print(channel); Serial.print("  "); Serial.print(volt, 3); Serial.println("V"); // Print with 3 decimal places
+  Serial.print(" "); Serial.print(temp, 3);  Serial.println("T");Serial.println(); // Print with 3 decimal places
 }
 
-
-float ReadVoltage(byte ADC_Pin) {
+void loop(void)
+{
   
-  
+  Serial.println("-----------------------------------------------------------");
+  temp(0, "PT1000");
+  temp(1, "TH10K");
+  temp(2, "TH5K");
+  temp(3, "PT100");
+
+  delay(1000);
 }
-
-#endif
-
 
