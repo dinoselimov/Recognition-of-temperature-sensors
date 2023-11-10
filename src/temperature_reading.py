@@ -39,6 +39,10 @@ class Temperature_Reading:
             thC = (gamma3 - gamma2) / (math.log(TR3) - math.log(TR2)) * (math.log(TR1) + math.log(TR2) + math.log(TR3))
             thB = gamma2 - thC * (math.log(TR1) * math.log(TR1) + math.log(TR1) * math.log(TR2) + math.log(TR2) * math.log(TR2))
             thA = 1 / T1 - (thB + math.log(TR1) * math.log(TR1) * thC) * math.log(TR1)
+
+            thA = 0.0012874
+            thB = 0.00023573
+            thC = 0.000000095052
             T_th = math.abs(1 / (thA + thB * math.log(resistance) + thC * math.log(resistance) * math.log(resistance) * math.log(resistance)) - 273.15)
 
             return T_th   

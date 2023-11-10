@@ -43,6 +43,9 @@ def exponential_model(xi, yi):
     print(a)
     print(b)
     return a, b
+
+
+
 '''
 x0 = 32320
 x1 = 12468
