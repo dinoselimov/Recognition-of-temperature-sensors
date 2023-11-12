@@ -1,4 +1,3 @@
-#if 0
 #define PT10032 32 // Analog IN
 #define PT10033 33 // Analog IN
 #define DRUGIMERILNIK 34 // DRUGI ANALOGNI
@@ -211,10 +210,10 @@ double ReadVoltage(){
   // volts3 = ads.computeVolts(adc3);
 
   Serial.println("-----------------------------------------------------------");
+
   // Serial.print("AIN0: "); Serial.print(adc0); Serial.print("  "); Serial.print(volts0); Serial.println("V");
   // Serial.print("AIN1: "); Serial.print(adc1); Serial.print("  "); Serial.print(volts1); Serial.println("V");
   // Serial.print("AIN2: "); Serial.print(adc2); Serial.print("  "); Serial.print(volts2); Serial.println("V");
   // Serial.print("AIN3: "); Serial.print(adc3); Serial.print("  "); Serial.print(volts3); Serial.println("V");
   return volts0;
   } 
-#endif

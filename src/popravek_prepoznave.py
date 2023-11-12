@@ -7,6 +7,9 @@ import novialgoritem
 import numpy as np
 import math
 
+import training_data
+import temperature_reading
+
 class App:
     def __init__(self):
         self.temperature = None
@@ -17,8 +20,12 @@ class App:
         self.measurement_pack_first = []
         self.measurement_pack_second = []
         self.measurement_pack_third = []
+        self.measurement_pack_fourth = []
         self.temperatures = []
         self.sensor_type = None
+        self.flag = False
+
+        self.received_packs = 0
 
     # Function which stores temperature
     def store_temperature(self, temperature, index):
@@ -37,7 +44,7 @@ class App:
         self.topic = message.topic
         self.payload = json.loads(message.payload.decode('utf-8'))
         print("on_message called")
-        
+   
         if self.topic == "resistances":
             resistance = self.payload["R"]                       
             self.measurements.append(resistance) # to je lista iz katere shranjujemo
@@ -51,20 +58,28 @@ class App:
                 elif not self.measurement_pack_second:
                     self.measurement_pack_second = self.measurements[:]
                 elif not self.measurement_pack_third:
-                    self.measurement_pack_third = self.measurements[:]            
+                    self.measurement_pack_third = self.measurements[:] 
+                    self.flag = True
+                elif not self.measurement_pack_fourth:
+                    self.measurement_pack_fourth = self.measurements[:]
+
                 self.measurements_received = 0
                 self.measurements.clear()
-                client.disconnect()
-                        
+                client.disconnect()     
+                
                 if (
                     len(self.measurement_pack_first) == 10
                     and len(self.measurement_pack_second) == 10
                     and len(self.measurement_pack_third) == 10
                 ):
                     self.additional_code() 
-            
-        print(f"Received measurements: ", self.measurements)
-        
+                    print("additional bajo")    
+        print(self.measurement_pack_first) 
+        print(self.measurement_pack_second)
+        print(self.measurement_pack_third)
+        if(self.flag == False):
+            print(f"Received measurements: ", self.measurements)  
+
     # Function which connects to broker with our username and password             
     def connect_to_broker(self):
         client = mqtt.Client()
@@ -102,6 +117,7 @@ class App:
             print("Successfully published control to topic")
         else:
             print(f"failed to publish a message, error number:{self.result}")
+        
         
         time.sleep(1)
         client.disconnect() # Because of this not being here, messages were not deployed to broker
@@ -150,17 +166,19 @@ class App:
         self.mid = client.publish(topic, message)[1]
         
     def additional_code(self):   
+        print("additional code called")
         average_first = sum(self.measurement_pack_first)/len(self.measurement_pack_first)
-        average_second = sum(self.new_second_table)/len(self.new_second_table)
-        average_third = sum(self.new_third_table)/len(self.new_third_table)
+        average_second = sum(self.measurement_pack_second)/len(self.measurement_pack_second)
+        average_third = sum(self.measurement_pack_third)/len(self.measurement_pack_third)
      
-        print(average_first)
-        print(average_second)
-        print(average_third)
-        average = np.array([average_first, average_second, average_third])
-        
-        print(self.temperatures)
-        self.sensor_type = novialgoritem.recognizeInstrument(average, self.temperatures)
+        data = [
+            (average_first, self.temperatures[0]),
+            (average_second , self.temperatures[1]),
+            (average_third , self.temperatures[2])
+        ]
+
+        print(data)   
+        self.sensor_type = training_data.recognize_instrument(data)
         # Define the known temperature-resistance values for each sensor type
         self.sensor_type_label.config(text=f"Sensor Type: {self.sensor_type}")
 
@@ -182,7 +200,7 @@ class App:
     def start_measurements_button(self):
         window = tk.Tk()
         window.title("Measurements App")
-        window.geometry("1200x600")
+        window.geometry("600x600")
 
         # Create a frame to hold the widgets
         frame = tk.Frame(window)
@@ -194,6 +212,11 @@ class App:
             start_button = tk.Button(frame, text=button_text, command=lambda i=i: self.start_measurements_process(i))
             start_button.pack(anchor="w", pady=5)
 
+        
+        # Create the button to start calculated temperatures
+        start_algorithm_button = tk.Button(window, text="Start Recognition", command=lambda: self.start_measurements_process(4))
+        start_algorithm_button.pack(pady=10)
+            
 
         # Create the temperature labels, entries, and store buttons
         temperature_frame = tk.Frame(window)

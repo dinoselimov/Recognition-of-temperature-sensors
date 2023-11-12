@@ -30,7 +30,6 @@ def fit_linear_model(data):
     print("Coefficients (intercept, slope):", intercept, slope)
 
     return coefficients, predictions
-
 def fit_exponential_model(data):
     # Extracting x and y values from the data
     x = np.array([item[0] for item in data])
@@ -41,10 +40,17 @@ def fit_exponential_model(data):
 
     # Take the natural logarithm of y to linearize the model
     y_log = np.log(y)
+    print(y)
+    print(np.var(y))
 
-    # Compute Coefficients using the least squares method
-    coefficients = np.linalg.inv(X.T @ X) @ X.T @ y_log
+    # Define weights based on the variance of y
+    weights = 1.0 / np.var(y)
 
+    weights = np.asanyarray(weights)
+    print(weights)
+
+    # Compute Coefficients using the weighted least squares method
+    coefficients = np.linalg.inv(X.T @ (weights * X)) @ X.T @ (weights * y_log)
     # Extracting coefficients
     a = np.exp(coefficients[0])
     b = coefficients[1]
@@ -64,15 +70,7 @@ def fit_exponential_model(data):
     print("Coefficients (a, b):", a, b)
 
     return coefficients, predictions
-'''# Data for PT1000
-PT1000_data = [
-    (1338.52, 87.76), (1317.77, 82.32), (1305.82, 79.17), (1284.32, 73.55),
-    (1266.25, 68.83), (1243.30, 62.84), (1237.81, 61.42), (1224.01, 57.82),
-    (1205.98, 53.13), (1186.31, 48.01), (1175.15, 45.12), (1161.72, 41.64),
-    (1158.16, 40.72), (1142.70, 36.72), (1133.50, 34.33), (1115.42, 29.67),
-    (1093.64, 24.05), (1078.88, 20.24), (1069.71, 17.87)
-]
-'''
+
 
 # Data for PT1000
 PT1000_data = [
@@ -106,14 +104,6 @@ TH10K_data = [
     (4671.2, 41.4), (5504.18, 37.5), (6197.8, 34.7), (7580.4, 30.2),
     (8624.0, 26.4), (11773.03, 20.4)]
 
-def combine_data(data1, data2):
-    if len(data1) != len(data2):
-        raise ValueError("Datasets not same length")
-    combine_data = [(data2[i][0], data1[i][1]) for i in range(len(data1))]
-    print(combine_data)
-    return combine_data
-
-
 coefficients_1, predictions_1 = fit_linear_model(PT1000_data)
 
 coefficients_2, predictions_2 = fit_linear_model(PT100_data)
@@ -137,6 +127,7 @@ coefficients_pt100 = (-255.31709799311022, 2.5952727740633916)
 coefficients_th5k = (86.21388153379931, -0.00027533588193951527)
 coefficients_th10k = (85.72497612351752, -0.00013692860706152927)
 
+'''
 # New resistances and temperatures for recognition
 new_data = [
     (800, 90),
@@ -144,23 +135,26 @@ new_data = [
     (10500, 25)
     # Add more data points as needed
 ]
+'''
+def recognize_instrument(new_data):
+    differences = {'PT1000': 0, 'PT100': 0, 'TH5K': 0, 'TH10K': 0}
 
-differences = {'PT1000': 0, 'PT100': 0, 'TH5K': 0, 'TH10K': 0}
+    for data_point in new_data:
+        resistance, temperature = data_point
+        # Make predictions for each sensor type
+        predictions_pt1000 = linear_model(resistance, coefficients_pt1000)
+        predictions_pt100 = linear_model(resistance, coefficients_pt100)
+        predictions_th5k = exponential_model(resistance, coefficients_th5k)
+        predictions_th10k = exponential_model(resistance, coefficients_th10k)
 
-for data_point in new_data:
-    resistance, temperature = data_point
-    # Make predictions for each sensor type
-    predictions_pt1000 = linear_model(resistance, coefficients_pt1000)
-    predictions_pt100 = linear_model(resistance, coefficients_pt100)
-    predictions_th5k = exponential_model(resistance, coefficients_th5k)
-    predictions_th10k = exponential_model(resistance, coefficients_th10k)
+        differences['PT1000'] += abs(predictions_pt1000 - float(temperature))
+        differences['PT100'] += abs(predictions_pt100 - float(temperature))
+        differences['TH5K'] += abs(predictions_th5k - float(temperature))
+        differences['TH10K'] += abs(predictions_th10k - float(temperature))
 
-    differences['PT1000'] += abs(predictions_pt1000 - temperature)
-    differences['PT100'] += abs(predictions_pt100 - temperature)
-    differences['TH5K'] += abs(predictions_th5k - temperature)
-    differences['TH10K'] += abs(predictions_th10k - temperature)
+    identified_sensor = min(differences, key=differences.get)
 
-identified_sensor = min(differences, key=differences.get)
-
-print(differences)
-print(f"The identified sensor is: {identified_sensor}")
+    print(differences)
+    print(f"The identified sensor is: {identified_sensor}")
+    
+    return identified_sensor 

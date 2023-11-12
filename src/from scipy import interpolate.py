@@ -29,7 +29,7 @@ print("Temperature:", temperature, "°C")
 
 
 #plt.plot(x_data_pt100, y_data_pt100, label='PT100')
-plt.plot(x_data_5k, y_data_5k, label='PT1000')
+plt.plot(x_data_5k, y_data_5k, label='TH5K')
 
 plt.xlabel('Temperatura (°C)')
 plt.ylabel('Upornost (Ohm)')
