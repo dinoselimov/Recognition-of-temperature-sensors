@@ -43,7 +43,6 @@ class App:
         self.measurement_pack_first = []
         self.measurement_pack_second = []
         self.measurement_pack_third = []
-        self.measurement_pack_fourth = []
         self.temperatures = []
         self.sensor_type = None
         self.flag = False
@@ -65,13 +64,13 @@ class App:
     # Callback function when we receive measurements
     def on_message(self, client, userdata, message):
         self.topic = message.topic
+        print("message:", message.payload)
         self.payload = json.loads(message.payload.decode('utf-8'))
         print("on_message called")
    
         if self.topic == "resistances":
             resistance = self.payload["R"]                       
             self.measurements.append(resistance) # to je lista iz katere shranjujemo
-            print("Appending one resistance")
             self.measurements_received += 1
             print("Received resistance measurement:", resistance)
 
@@ -101,6 +100,7 @@ class App:
         print(self.measurement_pack_third)
 
         if self.topic == "temperature":
+            print("Debugging payload", self.payload)
             resistance = self.payload["R"]                       
             self.measurements.append(resistance) # to je lista iz katere shranjujemo
             print("Appending one resistance")
@@ -174,13 +174,31 @@ class App:
             print("Failed to publish command")
 
     def start_measurement_thread(self):
+        client = self.connect_to_broker()
         
+        # Set the on_publish callback
+        client.on_publish = self.on_publish
+
+        client.loop_start()
+        
+        topic = "temperature"
+        client.subscribe(topic)
+        command = {
+            "action": "start/temperature",
+            "measurements_count": 0
+        }
+        message = json.dumps(command)
+
+        # Publish the message
+        self.mid = client.publish(topic, message)[1]
+ 
+        '''
         # Disable the button to prevent multiple clicks
         self.start_calculated_button.config(state=tk.DISABLED)
         measurement_thread = Thread(target=self.start_temperature_measurements)
     
         measurement_thread.start()
-    
+        '''
     def start_temperature_measurements(self):
         
         client = self.connect_to_broker()
@@ -200,7 +218,6 @@ class App:
         # Publish the message
         self.mid = client.publish(topic, message)[1]
  
-        
     def additional_code(self):   
         print("additional code called")
         average_first = sum(self.measurement_pack_first)/len(self.measurement_pack_first)

@@ -136,15 +136,6 @@ TH10K_data = [
 # Define functions for fitted models with obtained coefficients
 def linear_model(x, coefficients):
     intercept, slope = coefficients
-    
-    # Transpose the data to have columns as separate arrays
-    new_data_transposed = np.transpose(x)
-
-    # Calculate the variance for each column
-    variance_per_column = np.var(new_data_transposed)
-    deviation = np.sqrt(variance_per_column)
-    print("Standard deviation", deviation)
-
     return intercept + slope * x
 
 
@@ -217,4 +208,8 @@ def recognize_instrument(new_data):
     print(f"The identified sensor is: {identified_sensor}")
     
     return identified_sensor
- 
+
+fit_linear_model(PT100_data)
+fit_linear_model(PT1000_data)
+fit_exponential_model(TH5K_data)
+fit_exponential_model(TH10K_data)
