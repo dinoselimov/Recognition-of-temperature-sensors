@@ -26,8 +26,8 @@ const char* mqtt_password = "IdeaPad+-.2604";
 const unsigned long MEASUREMENT_INTERVAL = 5000; // Dolžina intervala med dvema meritvama
 const char* control_topic = "control";
 const char* topicOne = "resistances";
-const char* topicTwo = "drugi/merilnik";
 const char* topicTemperature = "temperature";
+const char *topic_start_temperature = "start/temperature";
 
 bool start_temperature_measurement = false; //uporablja se po prepoznavi, da začnemo druga merjenja
 
@@ -112,7 +112,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         delay(100);
     }
     if (action == "start/temperature"){
-      //start_temperature_measurement = true;
+      start_temperature_measurement = true;
     }
   }
 }
@@ -130,6 +130,9 @@ void reconnect(){
         // subscribe to topic
         client.subscribe("resistances");
         client.subscribe(control_topic);
+        client.subscribe("start/temperature");
+        client.subscribe(topicTemperature);
+
       }
     }
 }
@@ -162,8 +165,8 @@ void setup() {
         Serial.println("Connected to MQTT broker!");
         client.subscribe(topicOne);
         client.subscribe(control_topic);
-        client.subscribe(topicTwo);
         client.subscribe(topicTemperature);
+        client.subscribe("start/temperature");
       }else {
         Serial.println("Failed to connect to MQTT broker. Retrying in 5 seconds...");
         delay(5000);

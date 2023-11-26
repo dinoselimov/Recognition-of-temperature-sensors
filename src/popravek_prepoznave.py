@@ -92,14 +92,20 @@ class App:
                     len(self.measurement_pack_first) > 90
                     and len(self.measurement_pack_second) > 90
                     and len(self.measurement_pack_third) > 90
+                    
                 ):
                     self.additional_code() 
+
         print(self.measurement_pack_first) 
         print(self.measurement_pack_second)
         print(self.measurement_pack_third)
 
-        if(self.flag == False):
-            print(f"Received measurements: ", self.measurements)  
+        if self.topic == "temperature":
+            resistance = self.payload["R"]                       
+            self.measurements.append(resistance) # to je lista iz katere shranjujemo
+            print("Appending one resistance")
+            self.measurements_received += 1
+            print("Received resistance measurement:", resistance)
 
     # Function which connects to broker with our username and password             
     def connect_to_broker(self):
@@ -167,7 +173,16 @@ class App:
         else:
             print("Failed to publish command")
 
+    def start_measurement_thread(self):
+        
+        # Disable the button to prevent multiple clicks
+        self.start_calculated_button.config(state=tk.DISABLED)
+        measurement_thread = Thread(target=self.start_temperature_measurements)
+    
+        measurement_thread.start()
+    
     def start_temperature_measurements(self):
+        
         client = self.connect_to_broker()
         
         # Set the on_publish callback
@@ -184,6 +199,7 @@ class App:
 
         # Publish the message
         self.mid = client.publish(topic, message)[1]
+ 
         
     def additional_code(self):   
         print("additional code called")
@@ -221,6 +237,7 @@ class App:
         # We are calling receive_measurements 
         mqtt_thread = Thread(target=self.receive_measurements)
         mqtt_thread.start()
+
         #self.receive_measurements()    
         
     def start_measurements_button(self):
@@ -238,12 +255,7 @@ class App:
             start_button = tk.Button(frame, text=button_text, command=lambda i=i: self.start_measurements_process(i))
             start_button.pack(anchor="w", pady=5)
 
-        
-        # Create the button to start calculated temperatures
-        start_algorithm_button = tk.Button(window, text="Začni prepoznave", command=lambda: self.start_measurements_process(4))
-        start_algorithm_button.pack(pady=10)
             
-
         # Create the temperature labels, entries, and store buttons
         temperature_frame = tk.Frame(window)
         temperature_frame.pack(pady=20)
@@ -270,14 +282,14 @@ class App:
         self.sensor_type_label.pack(pady=10)        
 
         # Create the button to start calculated temperatures
-        start_calculated_button = tk.Button(window, text="Začni meritve temperature", command=self.start_temperature_measurements, state=tk.DISABLED)
-        start_calculated_button.pack(pady=10)
+        self.start_calculated_button = tk.Button(window, text="Začni meritve temperature", command=self.start_measurement_thread, state=tk.DISABLED)
+        self.start_calculated_button.pack(pady=10)
             
         def check_sensor_type_entry():
             if self.sensor_type:
-                start_calculated_button.config(state=tk.NORMAL)
+                self.start_calculated_button.config(state=tk.NORMAL)
             else:
-                start_calculated_button.config(state=tk.DISABLED)
+                self.start_calculated_button.config(state=tk.DISABLED)
             window.after(200, check_sensor_type_entry)
 
         window.after(200, check_sensor_type_entry)
