@@ -109,7 +109,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         client.publish(topicStr.c_str(), output, false); // QoS 0
 
         // Delay for 1 second before the next measurement
-        delay(1000);
+        delay(100);
     }
     if (action == "start/temperature"){
       //start_temperature_measurement = true;

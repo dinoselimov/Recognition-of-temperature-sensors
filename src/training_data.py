@@ -185,12 +185,12 @@ new_data = [
     # Add more data points as needed
 ]
 '''
-new_data = [
+'''
     (6221, 18.4),
     (1420, 54.5),
     (670, 75.9)
 ]
-
+'''
 def recognize_instrument(new_data):
     differences = {'PT1000': 0, 'PT100': 0, 'TH5K': 0, 'TH10K': 0}
 
@@ -202,7 +202,7 @@ def recognize_instrument(new_data):
     th5k = exponential_model(x, coefficients_th5k)
     th10k = exponential_model(x, coefficients_th10k)
 
-    y = np.array(y, dtype=float)  # Ensure dtype is float 
+    y = np.array(y, dtype=float)  #  Dtype must be float, in case we insert integer 
 
     differences['PT100'] = np.sum(np.abs(pt100 - (y)))
     differences['PT1000'] = np.sum(np.abs(pt1000 - (y)))
@@ -218,4 +218,3 @@ def recognize_instrument(new_data):
     
     return identified_sensor
  
-recognize_instrument(new_data)

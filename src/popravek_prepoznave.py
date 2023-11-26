@@ -75,7 +75,7 @@ class App:
             self.measurements_received += 1
             print("Received resistance measurement:", resistance)
 
-            if len(self.measurements) == 10:
+            if len(self.measurements) > 90:
                 if not self.measurement_pack_first:
                     self.measurement_pack_first = self.measurements[:]
                 elif not self.measurement_pack_second:
@@ -83,22 +83,21 @@ class App:
                 elif not self.measurement_pack_third:
                     self.measurement_pack_third = self.measurements[:] 
                     self.flag = True
-                elif not self.measurement_pack_fourth:
-                    self.measurement_pack_fourth = self.measurements[:]
 
                 self.measurements_received = 0
                 self.measurements.clear()
                 client.disconnect()     
                 
                 if (
-                    len(self.measurement_pack_first) == 10
-                    and len(self.measurement_pack_second) == 10
-                    and len(self.measurement_pack_third) == 10
+                    len(self.measurement_pack_first) > 90
+                    and len(self.measurement_pack_second) > 90
+                    and len(self.measurement_pack_third) > 90
                 ):
                     self.additional_code() 
         print(self.measurement_pack_first) 
         print(self.measurement_pack_second)
         print(self.measurement_pack_third)
+
         if(self.flag == False):
             print(f"Received measurements: ", self.measurements)  
 
@@ -123,10 +122,10 @@ class App:
     def send_command(self):
         client = self.connect_to_broker()
 
-        measurements_count = 10
+        measurements_count = 100
         command = {
             "action": "start_measurements",
-            "measurements_count": 10
+            "measurements_count": 100
         }
         message = json.dumps(command)
         topic = "control"
@@ -154,8 +153,8 @@ class App:
 
         # Start background thread for MQTT communication
         client.loop_start()
-        while len(self.measurements) < 10:
-            time.sleep(2)
+        while len(self.measurements) < 100:
+            time.sleep(0.01)
 
         time.sleep(1)       # Sleep to wait for next message
         client.disconnect() # Disconnecting MQTT after receiving message
@@ -191,7 +190,11 @@ class App:
         average_first = sum(self.measurement_pack_first)/len(self.measurement_pack_first)
         average_second = sum(self.measurement_pack_second)/len(self.measurement_pack_second)
         average_third = sum(self.measurement_pack_third)/len(self.measurement_pack_third)
-     
+
+        print(average_first)
+        print(average_second)
+        print(average_third)
+
         data = [
             (average_first, self.temperatures[0]),
             (average_second , self.temperatures[1]),
@@ -203,9 +206,11 @@ class App:
         # Define the known temperature-resistance values for each sensor type
         self.sensor_type_label.config(text=f"Sensor Type: {self.sensor_type}")
 
+        '''
         mqtt_thread2 = Thread(target=self.start_temperature_measurements)
         mqtt_thread2.start()
         
+        '''
         time.sleep(5)
         print("Additional code execution completed.")
 
