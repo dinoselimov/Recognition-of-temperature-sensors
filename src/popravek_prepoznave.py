@@ -11,6 +11,29 @@ import training_data
 import temperature_reading
 
 class App:
+    """
+    The `App` class encapsulates the entire functionality of the application, providing a modular and organized
+    structure. It contains the following functions:
+    - `connect_to_broker`: Manages the connection to the MQTT broker with username and password.
+    - `send_command`: Sends commands to start measurements to the ESP32 device.
+    - `receive_measurements`: Handles the reception and processing of resistance measurements from the ESP32.
+    - `on_connect`: Callback function for handling MQTT connection events.
+    - `on_message`: Callback function for processing MQTT messages, specifically resistance measurements.
+    - `on_publish`: Callback function to check the publish status of MQTT commands.
+    - `start_temperature_measurements`: Initiates the process to start temperature measurements.
+    - `additional_code`: Executes additional code after receiving and processing resistance measurements.
+    - `store_temperature`: Stores temperature values provided by the user.
+    - `start_measurements_process`: Orchestrates the process of starting and receiving measurements.
+    - `start_measurements_button`: Initializes the GUI for the application, including buttons and labels.
+
+    GUI Components:
+    - Buttons for starting temperature measurements for three sensors individually.
+    - Entry fields for entering actual temperatures corresponding to each sensor.
+    - Buttons for confirming entered temperatures.
+    - A label displaying the recognized sensor type.
+    - A button to start calculated temperatures (disabled until a sensor type is recognized).
+
+    """
     def __init__(self):
         self.temperature = None
         self.stop_mqtt_thread = False
@@ -73,7 +96,6 @@ class App:
                     and len(self.measurement_pack_third) == 10
                 ):
                     self.additional_code() 
-                    print("additional bajo")    
         print(self.measurement_pack_first) 
         print(self.measurement_pack_second)
         print(self.measurement_pack_third)
@@ -117,7 +139,6 @@ class App:
             print("Successfully published control to topic")
         else:
             print(f"failed to publish a message, error number:{self.result}")
-        
         
         time.sleep(1)
         client.disconnect() # Because of this not being here, messages were not deployed to broker
@@ -214,7 +235,7 @@ class App:
 
         
         # Create the button to start calculated temperatures
-        start_algorithm_button = tk.Button(window, text="Start Recognition", command=lambda: self.start_measurements_process(4))
+        start_algorithm_button = tk.Button(window, text="Začni prepoznave", command=lambda: self.start_measurements_process(4))
         start_algorithm_button.pack(pady=10)
             
 
@@ -240,11 +261,11 @@ class App:
             store_buttons.append(store_button)
             
         # Create the label to display self.sensor_type
-        self.sensor_type_label = tk.Label(window, text="Sensor Type: ")
+        self.sensor_type_label = tk.Label(window, text="Tip senzorja: ")
         self.sensor_type_label.pack(pady=10)        
 
         # Create the button to start calculated temperatures
-        start_calculated_button = tk.Button(window, text="Start Calculated Temperatures", command=self.start_temperature_measurements, state=tk.DISABLED)
+        start_calculated_button = tk.Button(window, text="Začni meritve temperature", command=self.start_temperature_measurements, state=tk.DISABLED)
         start_calculated_button.pack(pady=10)
             
         def check_sensor_type_entry():
@@ -261,7 +282,6 @@ class App:
 app = App()
 '''app.run()'''
 app.start_measurements_button()
-
 
 
 

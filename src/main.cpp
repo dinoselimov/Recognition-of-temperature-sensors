@@ -37,12 +37,14 @@ double ReadVoltage();
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-float adc_voltage(float left_voltage){
+float adc_voltage(float left_voltage){3
   float output_voltage = left_voltage * (3.3/pow(2,12));
+  output_voltage = 3.3 - output_voltage;
   return output_voltage; //to je v pravih vrednostih
 }
 
 int wheatstone_resistance(float output_voltage){
+
   float R_0 = 1000;
   float Rth = R_0*((3.3/output_voltage) - 1);
   return Rth;
@@ -193,26 +195,4 @@ void loop() {
     delay(1000);
   }
 }
-
-double ReadVoltage(){
-  int16_t adc0, adc1, adc2, adc3;
-  float volts0, volts1, volts2, volts3;
-
-  adc0 = ads.readADCSingleEnded(0);
-  // adc1 = ads.readADCSingleEnded(1);
-  // adc2 = ads.readADCSingleEnded(2);
-  // adc3 = ads.readADCSingleEnded(3);
-
-  volts0 = ads.computeVolts(adc0);
-  // volts1 = ads.computeVolts(adc1);
-  // volts2 = ads.computeVolts(adc2);
-  // volts3 = ads.computeVolts(adc3);
-
-  Serial.println("-----------------------------------------------------------");
-  // Serial.print("AIN0: "); Serial.print(adc0); Serial.print("  "); Serial.print(volts0); Serial.println("V");
-  // Serial.print("AIN1: "); Serial.print(adc1); Serial.print("  "); Serial.print(volts1); Serial.println("V");
-  // Serial.print("AIN2: "); Serial.print(adc2); Serial.print("  "); Serial.print(volts2); Serial.println("V");
-  // Serial.print("AIN3: "); Serial.print(adc3); Serial.print("  "); Serial.print(volts3); Serial.println("V");
-  return volts0;
-  } 
 #endif

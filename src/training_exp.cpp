@@ -156,9 +156,9 @@ void setup(void)
     volt_3 = ads.computeVolts(adc_3);
 
     temp0[i] = get_temperature(0, "PT1000");
-    temp1[i] = get_temperature(1, "TH10K");
+    temp1[i] = get_temperature(1, "TH5K");
     temp2[i] = get_temperature(2, "PT100");
-    temp3[i] = get_temperature(3, "TH5K");
+    temp3[i] = get_temperature(3, "TH10K");
     
     res0[i] = wheatstone_resistance(volt_0);
     res1[i] = wheatstone_resistance(volt_1);
@@ -193,7 +193,7 @@ void setup(void)
   Serial.print("PT100"); Serial.print(" "); Serial.println(temp2_av); Serial.print(" "); Serial.print(res2_av); Serial.println(" "); 
   Serial.print("TH5K"); Serial.print(" "); Serial.println(temp3_av); Serial.print(" "); Serial.print(res3_av); Serial.println(" "); 
 
-  delay(10);
+  delay(100);
 }
 
 void loop(void)

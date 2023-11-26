@@ -17,19 +17,20 @@ def fit_linear_model(data):
 
     # Make Predictions
     predictions = X @ coefficients
-
+    
     # Plotting the data and the fitted linear model
-    plt.scatter(x, y, label='Original Data')
-    plt.plot(x, predictions, label='Fitted Linear Model', color='red')
+    plt.scatter(x, y, label='Pomerjene točke')
+    plt.plot(x, predictions, label='Prilagojen linearen model', color='red')
     plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('Fitted Linear Model')
+    plt.title('Linearni Model')
     plt.show()
-
+    
     print("Coefficients (intercept, slope):", intercept, slope)
 
     return coefficients, predictions
+
 def fit_exponential_model(data):
     # Extracting x and y values from the data
     x = np.array([item[0] for item in data])
@@ -40,38 +41,35 @@ def fit_exponential_model(data):
 
     # Take the natural logarithm of y to linearize the model
     y_log = np.log(y)
-    print(y)
-    print(np.var(y))
 
     # Define weights based on the variance of y
-    weights = 1.0 / np.var(y)
-
+    #weights = 1.0 / np.var(y)
+    weights = y
     weights = np.asanyarray(weights)
     print(weights)
 
     # Compute Coefficients using the weighted least squares method
-    coefficients = np.linalg.inv(X.T @ (weights * X)) @ X.T @ (weights * y_log)
-    # Extracting coefficients
-    a = np.exp(coefficients[0])
+    #coefficients = np.linalg.inv(X.T @ (weights * X)) @ X.T @ (weights * y_log)
+    coefficients = np.linalg.inv(X.T @ (weights[:, None] * X)) @ X.T @ (weights * y_log)    # Extracting coefficients
+    ln_a = (coefficients[0])
     b = coefficients[1]
-
+    a = np.exp(ln_a)
     # Make Predictions
     predictions = a * np.exp(b * x)
-
+    
     # Plotting the data and the fitted exponential model
-    plt.scatter(x, y, label='Original Data')
-    plt.plot(x, predictions, label='Fitted Exponential Model', color='red')
+    plt.scatter(x, y, label='Pomerjeni podatki')
+    plt.plot(x, predictions, label='Prilagojen eksponencijalen model', color='red')
     plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('Fitted Exponential Model')
+    plt.title('Eksponencijalni Model')
     plt.show()
-
     print("Coefficients (a, b):", a, b)
 
     return coefficients, predictions
 
-
+'''
 # Data for PT1000
 PT1000_data = [
     (1338.52, 90.3), (1317.77, 85.7), (1305.82, 80.9 ), (1284.32, 76.1),
@@ -103,58 +101,121 @@ TH10K_data = [
     (2739.86, 54.9), (3221.64, 50.5), (3720.86, 47), (4192.23, 44.3),
     (4671.2, 41.4), (5504.18, 37.5), (6197.8, 34.7), (7580.4, 30.2),
     (8624.0, 26.4), (11773.03, 20.4)]
+'''
 
-coefficients_1, predictions_1 = fit_linear_model(PT1000_data)
-
-coefficients_2, predictions_2 = fit_linear_model(PT100_data)
-
-coefficients_3, predictions_3 = fit_exponential_model(TH5K_data)
-
-coefficients_4, predictions_4 = fit_exponential_model(TH10K_data)
+# Data for PT1000
+PT1000_data = [
+    (1342.52, 86.5), (1326.27, 83), (1306.25, 77 ), (1287.08, 72.5),
+    (1276.46, 69.5), (1258.97, 66), (1242.84, 61.5), (1221.23, 57.4),
+    (1202.36, 53.3), (1185.58, 49), (1175.11, 46), (1170.43, 43.3),
+    (1162.36, 40.2), (1154.63, 36.6), (1111.84, 29.3),
+    (1102.54, 27.3), (1097.12, 24.5), (1084.36, 21.8)
+]
+TH5K_data = [
+    (423.52, 86.5), (481.50, 83), (573.90, 77 ), (676.75, 72.5),
+    (747.15, 69.5), (854.51, 66), (994.25, 61.5), (1265.42, 57.4),
+    (1470.54, 53.3), (1736.24, 49), (1928.19, 46), (2179.77, 43.3),
+    (2468.17, 40.2), (2880.47, 36.6), (3408.46, 33), (3960.12, 29.3),
+    (4421.77, 27.3), (4851.93, 24.5), (6164.58, 21.8)
+]
+PT100_data = [
+    (134.84, 86.5), (134, 83), (132.09, 77 ), (129.95, 72.5),
+    (128.52, 69.5), (126.91, 66), (124.76, 61.5), (123.49, 57.4),
+    (120.88, 53.3), (119.39, 49), (118.65, 46), (118.98, 43.3),
+    (118.08, 40.2), (116.58, 36.6), (114.80, 33), (112.16, 29.3),
+    (110.60, 27.3), (111.22, 24.5), (109.82, 21.8)
+]
+TH10K_data = [
+    (810.56, 86.5), (901.21, 83), (1121.89, 77 ), (1299.39, 72.5),
+    (1440.27, 69.5), (1615.75, 66), (1926.24, 61.5), (2448.05, 57.4),
+    (2909.00, 53.3), (3406.25, 49), (3811.06, 46), (4152.41, 43.3),
+    (4763.95, 40.2), (5664.58, 36.6), (6728.23, 33), (7822.26, 29.3),
+    (8629.05, 27.3), (9511.03, 24.5), (12006.66, 21.8)
+]
 
 # Define functions for fitted models with obtained coefficients
 def linear_model(x, coefficients):
     intercept, slope = coefficients
+    
+    # Transpose the data to have columns as separate arrays
+    new_data_transposed = np.transpose(x)
+
+    # Calculate the variance for each column
+    variance_per_column = np.var(new_data_transposed)
+    deviation = np.sqrt(variance_per_column)
+    print("Standard deviation", deviation)
+
     return intercept + slope * x
+
 
 def exponential_model(x, coefficients):
     a, b = coefficients
-    return a * np.exp(b * x)
-
+    print("coefficients:", coefficients)
+    predictions = a * np.exp(b * x)
+    
+    # Don't include in program, because starting a MatplotGUI outside of the main thread will likely fall
+    '''
+    # Plotting the data and the fitted exponential model
+    plt.scatter(x, predictions, label='Fitted Exponential Model', color='red')
+    plt.xlabel('x')
+    plt.ylabel('Predictions')
+    plt.title('Fitted Exponential Model')
+    plt.legend()
+    plt.show()
+    '''
+    return predictions
+'''
 # Coefficients for PT1000, PT100, TH5K, and TH10K
 coefficients_pt1000 = (-260.3306800607545, 0.2615414383832818)
 coefficients_pt100 = (-255.31709799311022, 2.5952727740633916)
 coefficients_th5k = (86.21388153379931, -0.00027533588193951527)
 coefficients_th10k = (85.72497612351752, -0.00013692860706152927)
+'''
+coefficients_pt1000 = (-253.58764550253449, 0.2535439569327526)
+coefficients_pt100 = (-255.31162871251036, 2.5278962517294774)
+coefficients_th5k = (85.23508764589549, -0.0002677961726906676)
+coefficients_th10k = (84.94632442583986, -0.00013643613903726272)
 
 '''
 # New resistances and temperatures for recognition
 new_data = [
-    (800, 90),
-    (2400, 60),
-    (10500, 25)
+    (10000, 8),
+    (5000, 25),
+    (878, 85)
     # Add more data points as needed
 ]
 '''
+new_data = [
+    (6221, 18.4),
+    (1420, 54.5),
+    (670, 75.9)
+]
+
 def recognize_instrument(new_data):
     differences = {'PT1000': 0, 'PT100': 0, 'TH5K': 0, 'TH10K': 0}
 
-    for data_point in new_data:
-        resistance, temperature = data_point
-        # Make predictions for each sensor type
-        predictions_pt1000 = linear_model(resistance, coefficients_pt1000)
-        predictions_pt100 = linear_model(resistance, coefficients_pt100)
-        predictions_th5k = exponential_model(resistance, coefficients_th5k)
-        predictions_th10k = exponential_model(resistance, coefficients_th10k)
+    x = np.array([item[0] for item in new_data])
+    y = np.array([item[1] for item in new_data])
+    
+    pt100 = linear_model(x, coefficients_pt100)
+    pt1000 = linear_model(x, coefficients_pt1000)
+    th5k = exponential_model(x, coefficients_th5k)
+    th10k = exponential_model(x, coefficients_th10k)
 
-        differences['PT1000'] += abs(predictions_pt1000 - float(temperature))
-        differences['PT100'] += abs(predictions_pt100 - float(temperature))
-        differences['TH5K'] += abs(predictions_th5k - float(temperature))
-        differences['TH10K'] += abs(predictions_th10k - float(temperature))
+    y = np.array(y, dtype=float)  # Ensure dtype is float 
+
+    differences['PT100'] = np.sum(np.abs(pt100 - (y)))
+    differences['PT1000'] = np.sum(np.abs(pt1000 - (y)))
+    differences['TH5K'] = np.sum(np.abs(th5k - (y)))
+    differences['TH10K'] = np.sum(np.abs(th10k - (y)))
+
+    print(differences)
 
     identified_sensor = min(differences, key=differences.get)
 
     print(differences)
     print(f"The identified sensor is: {identified_sensor}")
     
-    return identified_sensor 
+    return identified_sensor
+ 
+recognize_instrument(new_data)

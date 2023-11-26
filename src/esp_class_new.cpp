@@ -41,7 +41,7 @@ float adc_voltage(float left_voltage){
   return output_voltage; //to je v pravih vrednostih
 }
 
-int wheatstone_resistance(float output_voltage){
+int voltage_divider(float output_voltage){
   float R_0 = 1000;
   float Rth = R_0*((3.3/output_voltage) - 1);
   return Rth;
@@ -95,7 +95,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         // Perform the temperature measurement and obtain the resistance value
         // float Vin2 = analogRead(PT10033);
         float voltage = ReadVoltage();
-        float resistance = wheatstone_resistance(voltage);
+        float resistance = voltage_divider(voltage);
         Serial.println(resistance);
 
         // Create a JSON document to store the resistance value
@@ -181,7 +181,7 @@ void loop() {
   if(start_temperature_measurement){
     float voltage, resistance;
     voltage = ReadVoltage();
-    resistance = wheatstone_resistance(voltage);
+    resistance = voltage_divider(voltage);
     Serial.println(resistance);
     StaticJsonDocument<80> resistanceDoc;
     char output[50];
