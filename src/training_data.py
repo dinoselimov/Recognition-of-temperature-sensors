@@ -103,7 +103,7 @@ TH10K_data = [
     (8624.0, 26.4), (11773.03, 20.4)]
 '''
 
-# Data for PT1000
+# Corrected and better training data
 PT1000_data = [
     (1342.52, 86.5), (1326.27, 83), (1306.25, 77 ), (1287.08, 72.5),
     (1276.46, 69.5), (1258.97, 66), (1242.84, 61.5), (1221.23, 57.4),
@@ -162,26 +162,14 @@ coefficients_pt100 = (-255.31709799311022, 2.5952727740633916)
 coefficients_th5k = (86.21388153379931, -0.00027533588193951527)
 coefficients_th10k = (85.72497612351752, -0.00013692860706152927)
 '''
+
+#Corrected coefficients
 coefficients_pt1000 = (-253.58764550253449, 0.2535439569327526)
 coefficients_pt100 = (-255.31162871251036, 2.5278962517294774)
 coefficients_th5k = (85.23508764589549, -0.0002677961726906676)
 coefficients_th10k = (84.94632442583986, -0.00013643613903726272)
 
-'''
-# New resistances and temperatures for recognition
-new_data = [
-    (10000, 8),
-    (5000, 25),
-    (878, 85)
-    # Add more data points as needed
-]
-'''
-'''
-    (6221, 18.4),
-    (1420, 54.5),
-    (670, 75.9)
-]
-'''
+
 def recognize_instrument(new_data):
     differences = {'PT1000': 0, 'PT100': 0, 'TH5K': 0, 'TH10K': 0}
 

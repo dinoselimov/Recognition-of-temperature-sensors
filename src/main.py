@@ -3,7 +3,6 @@ import paho.mqtt.client as mqtt
 import json
 import time
 import tkinter as tk
-import novialgoritem
 import numpy as np
 import math
 
@@ -14,6 +13,7 @@ class App:
     """
     The `App` class encapsulates the entire functionality of the application, providing a modular and organized
     structure. It contains the following functions:
+    
     - `connect_to_broker`: Manages the connection to the MQTT broker with username and password.
     - `send_command`: Sends commands to start measurements to the ESP32 device.
     - `receive_measurements`: Handles the reception and processing of resistance measurements from the ESP32.
