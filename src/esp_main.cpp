@@ -42,8 +42,8 @@ float adc_voltage(float left_voltage){
 }
 
 int voltage_divider(float output_voltage){
-  float R_0 = 1000;
-  float Rth = R_0*((3.3/output_voltage) - 1);
+  float R_0 = 980;
+  float Rth = R_0*((3.266/output_voltage) - 1);
   return Rth;
 }
  

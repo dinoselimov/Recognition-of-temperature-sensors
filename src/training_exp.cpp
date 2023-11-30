@@ -155,7 +155,7 @@ void setup(void)
     adc_3 = ads.readADCSingleEnded(3);
     volt_3 = ads.computeVolts(adc_3);
 
-    temp0[i] = get_temperature(0, "PT1000");
+    temp0[i] = get_temperature(0, "PT100");
     temp1[i] = get_temperature(1, "TH5K");
     temp2[i] = get_temperature(2, "PT100");
     temp3[i] = get_temperature(3, "TH10K");
