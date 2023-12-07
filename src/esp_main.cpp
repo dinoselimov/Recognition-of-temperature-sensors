@@ -17,12 +17,13 @@ using namespace ADS1X15;
 //ADS1015<TwoWire> ads(Wire); /* Use this for the 12-bit version */
 ADS1115<TwoWire> ads(Wire); /* Use this for the 16-bit version */  
 
+// Data about WiFi, MQTT broker, MQTT topics, and other constants
 const char* ssid = "GNX611368";
 const char* password = "12345678";
 const char *mqttServer = "broker.hivemq.com";
 const int mqttPort = 1883; // pri 1883 dela, pri 8883 ne
 const char* mqtt_user = "DinoSelim";
-const char* mqtt_password = "IdeaPad+-.2604";
+const char* mqtt_password = "mqttpassword";
 const unsigned long MEASUREMENT_INTERVAL = 5000; // Dolžina intervala med dvema meritvama
 const char* control_topic = "control";
 const char* topicOne = "resistances";
@@ -33,14 +34,18 @@ bool start_temperature_measurement = false; //uporablja se po prepoznavi, da za�
 
 double ReadVoltage();
 
+// Connecting to WiFi and MQTT library
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+/*
 float adc_voltage(float left_voltage){
   float output_voltage = left_voltage * (3.3/pow(2,12));
   return output_voltage; //to je v pravih vrednostih
 }
+*/
 
+// Calculating voltage divider with measured voltage of source and resistance of divider
 int voltage_divider(float output_voltage){
   float R_0 = 980;
   float Rth = R_0*((3.266/output_voltage) - 1);
@@ -49,12 +54,11 @@ int voltage_divider(float output_voltage){
  
 void callback(char* topic, byte* payload, unsigned int length) {
   // Handle received MQTT messages
-  Serial.println("Callback is called");
   Serial.println(topic);
   if (strncmp(topic, control_topic, length) == 0) {
     String message = "";
     for (int i = 0; i < length; i++) {
-      message += (char)payload[i]; //pretvorba payloada v string
+      message += (char)payload[i]; // Convert from payload to string
     }
 
     Serial.println(message);
@@ -90,11 +94,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     // Check the received action
     if (action == "start_measurements") {
       // Start measuring temperatures
-      for (int i = 0; i < measurements_count; i++) {
-      // TODO: Start the temperature measurement here
-        
+      for (int i = 0; i < measurements_count; i++) {        
         // Perform the temperature measurement and obtain the resistance value
-        // float Vin2 = analogRead(PT10033);
         float voltage = ReadVoltage();
         float resistance = voltage_divider(voltage);
         Serial.println(resistance);
@@ -106,19 +107,20 @@ void callback(char* topic, byte* payload, unsigned int length) {
         serializeJson(resistanceDoc, output);
 
         // Publish the resistance value to the MQTT topic
-        String topicStr = topicOne; // Modify the topic according to the temperature you are measuring
+        String topicStr = topicOne; 
         client.publish(topicStr.c_str(), output, false); // QoS 0
 
-        // Delay for 1 second before the next measurement
         delay(100);
     }
     if (action == "start/temperature"){
+      // After recognition, received command to start measuring actual temperature
       start_temperature_measurement = true;
     }
   }
 }
 }
 
+// Function to reconnect if we are disconnected disconnect
 void reconnect(){
   Serial.println("Connecting to MQTT Broker...");
   while (!client.connected()) {
@@ -128,7 +130,7 @@ void reconnect(){
       
       if (client.connect(clientId.c_str())) {
         Serial.println("Connected.");
-        // subscribe to topic
+        // Subscribe to four topics
         client.subscribe("resistances");
         client.subscribe(control_topic);
         client.subscribe("start/temperature");
@@ -138,10 +140,10 @@ void reconnect(){
     }
 }
 
+// Connect with local WiFi, initialization of ADS, connection with MQTT broker and setting callback function
 void setup() {
   Serial.begin(9600); 
 
-  // Povezati se z lokalnim WiFi omrežjem
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
       delay(1000);
@@ -181,9 +183,8 @@ void loop() {
     reconnect();
   }    
   client.loop();
-  Serial.print(start_temperature_measurement);
 
-  Serial.println("Loop is running");
+  // After recognition, this section of code sends resistances and measures actual temperatures
   if(start_temperature_measurement){
     float voltage, resistance;
     voltage = ReadVoltage();
@@ -194,14 +195,15 @@ void loop() {
     resistanceDoc["R"] = resistance;
     serializeJson(resistanceDoc, output);
     Serial.println(output);
-    String topicStr = topicTemperature; // Modify the topic according to the temperature you are measuring
+    String topicStr = topicTemperature; 
     client.publish(topicStr.c_str(), output, false); // QoS 0
 
-    // Delay for 1 second before the next measurement
+    // Delay for next measurement
     delay(1000);
   }
 }
 
+// ADS1115 function for measuring voltage
 double ReadVoltage(){
   int16_t adc0, adc1, adc2, adc3;
   float volts0, volts1, volts2, volts3;

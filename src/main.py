@@ -173,6 +173,7 @@ class App:
         else:
             print("Failed to publish command")
 
+    # Start temperature measurements after recognition
     def start_measurement_thread(self):
         client = self.connect_to_broker()
         
@@ -185,7 +186,7 @@ class App:
         client.subscribe(topic)
         command = {
             "action": "start/temperature",
-            "measurements_count": 0
+            "measurements_count": 100
         }
         message = json.dumps(command)
 
