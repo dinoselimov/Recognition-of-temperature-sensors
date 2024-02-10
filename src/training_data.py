@@ -36,36 +36,24 @@ def fit_exponential_model(data):
     x = np.array([item[0] for item in data])
     y = np.array([item[1] for item in data])
 
-    # Formulate the Objective Function for an Exponential Model (y = a * e^(bx))
-    X = np.vstack([np.ones_like(x), x]).T
+    # Formulate the Objective Function for a Steinhart-Hart equation
+    X = np.vstack([np.ones_like(x), np.log(x), np.log(x)**3]).T
 
-    # Take the natural logarithm of y to linearize the model
-    y_log = np.log(y)
+    coefficients = np.linalg.inv(X.T @ X) @ X.T @ y
 
-    # Define weights based on the variance of y
-    #weights = 1.0 / np.var(y)
-    weights = y
-    weights = np.asanyarray(weights)
-    print(weights)
-
-    # Compute Coefficients using the weighted least squares method
-    #coefficients = np.linalg.inv(X.T @ (weights * X)) @ X.T @ (weights * y_log)
-    coefficients = np.linalg.inv(X.T @ (weights[:, None] * X)) @ X.T @ (weights * y_log)    # Extracting coefficients
-    ln_a = (coefficients[0])
-    b = coefficients[1]
-    a = np.exp(ln_a)
+    A, B, C = coefficients
     # Make Predictions
-    predictions = a * np.exp(b * x)
+    predictions = X @ coefficients
     
     # Plotting the data and the fitted exponential model
     plt.scatter(x, y, label='Pomerjeni podatki')
-    plt.plot(x, predictions, label='Prilagojen eksponencijalen model', color='red')
+    plt.plot(x, predictions, label='Prilagojen Steinhart-Hart model', color='red')
     plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
-    plt.title('Eksponencijalni Model')
+    plt.title('Steinhart-Hart Model')
     plt.show()
-    print("Coefficients (a, b):", a, b)
+    print("Coefficients (A, B, C):", A, B, C)
 
     return coefficients, predictions
 
@@ -105,29 +93,15 @@ def linear_model(x, coefficients):
     return intercept + slope * x
 
 
-def exponential_model(x, coefficients):
-    a, b = coefficients
-    print("coefficients:", coefficients)
-    predictions = a * np.exp(b * x)
-    
-    # Don't include in program, because starting a MatplotGUI outside of the main thread will likely fall
-    '''
-    # Plotting the data and the fitted exponential model
-    plt.scatter(x, predictions, label='Fitted Exponential Model', color='red')
-    plt.xlabel('x')
-    plt.ylabel('Predictions')
-    plt.title('Fitted Exponential Model')
-    plt.legend()
-    plt.show()
-    '''
-    return predictions
+# Define the Steinhart-Hart equation
+def steinhart_hart_equation(x, A, B, C):
+    return (A + B * np.log(x) + C * (np.log(x))**3)
 
 #Corrected coefficients
 coefficients_pt1000 = (-253.58764550253449, 0.2535439569327526)
 coefficients_pt100 = (-255.31162871251036, 2.5278962517294774)
-coefficients_th5k = (85.23508764589549, -0.0002677961726906676)
-coefficients_th10k = (84.94632442583986, -0.00013643613903726272)
-
+coefficients_th5k = ( 297.29153084495874, -37.92062011369887, 0.08199604438012592)
+coefficients_th10k = ( 315.98834354026803, -37.40210606159289, 0.0678906892369372)
 
 def recognize_instrument(new_data):
     differences = {'PT1000': 0, 'PT100': 0, 'TH5K': 0, 'TH10K': 0}
@@ -137,17 +111,17 @@ def recognize_instrument(new_data):
     
     pt100 = linear_model(x, coefficients_pt100)
     pt1000 = linear_model(x, coefficients_pt1000)
-    th5k = exponential_model(x, coefficients_th5k)
-    th10k = exponential_model(x, coefficients_th10k)
+    th5k = steinhart_hart_equation(x, coefficients_th5k[0], coefficients_th5k[1], coefficients_th5k[2])
+    th10k = steinhart_hart_equation(x, coefficients_th10k[0], coefficients_th10k[1], coefficients_th10k[2])
 
     y = np.array(y, dtype=float)  #  Dtype must be float, in case we insert integer 
 
     differences['PT100'] = np.sum(np.abs(pt100 - (y)))
     differences['PT1000'] = np.sum(np.abs(pt1000 - (y)))
+
+
     differences['TH5K'] = np.sum(np.abs(th5k - (y)))
     differences['TH10K'] = np.sum(np.abs(th10k - (y)))
-
-    print(differences)
 
     identified_sensor = min(differences, key=differences.get)
 
