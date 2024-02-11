@@ -31,7 +31,7 @@ def fit_linear_model(data):
 
     return coefficients, predictions
 
-def fit_exponential_model(data):
+def fit_steiharthart_model(data):
     # Extracting x and y values from the data
     x = np.array([item[0] for item in data])
     y = np.array([item[1] for item in data])
@@ -133,5 +133,5 @@ def recognize_instrument(new_data):
 
 fit_linear_model(PT100_data)
 fit_linear_model(PT1000_data)
-fit_exponential_model(TH5K_data)
-fit_exponential_model(TH10K_data)
+fit_steiharthart_model(TH5K_data)
+fit_steiharthart_model(TH10K_data)
