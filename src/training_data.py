@@ -27,7 +27,7 @@ def fit_linear_model(data):
     plt.title('Linearni Model')
     plt.show()
     
-    print("Coefficients (intercept, slope):", intercept, slope)
+    print("Koeficienta (presek, naklon):", intercept, slope)
 
     return coefficients, predictions
 
@@ -37,6 +37,7 @@ def fit_exponential_model(data):
     y = np.array([item[1] for item in data])
 
     # Formulate the Objective Function for a Steinhart-Hart equation
+    #X = np.vstack([np.ones_like(x), np.log(x), np.log(x)**3]).T
     X = np.vstack([np.ones_like(x), np.log(x), np.log(x)**3]).T
 
     coefficients = np.linalg.inv(X.T @ X) @ X.T @ y
